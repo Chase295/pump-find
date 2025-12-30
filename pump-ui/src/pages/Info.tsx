@@ -71,7 +71,9 @@ const Info: React.FC = () => {
               - Port: 3001<br/>
               - Protokoll: HTTP (SSL von Coolify)<br/>
               - UI: https://deine-domain.com<br/>
-              - API: https://deine-domain.com/api/health
+              - API Health: https://deine-domain.com/api/health<br/>
+              - API Metrics: https://deine-domain.com/api/metrics<br/>
+              - API Docs: https://deine-domain.com/api/docs
             </Typography>
 
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem', mb: 2, color: '#4caf50', fontWeight: 'bold' }}>
@@ -87,6 +89,10 @@ const Info: React.FC = () => {
               │                           │<br/>
               ▼                           │<br/>
               /api/* → pump-service:8000   │<br/>
+              ├─ /api/health ✅           │<br/>
+              ├─ /api/metrics ✅          │<br/>
+              ├─ /api/docs ✅             │<br/>
+              └─ /api/config ✅           │<br/>
               UI files → static serving   │<br/>
             </Typography>
 
@@ -97,7 +103,8 @@ const Info: React.FC = () => {
               - API nur intern im Docker-Netzwerk<br/>
               - Kein direkter externer Zugriff auf API<br/>
               - Nginx Reverse Proxy als Sicherheits-Gateway<br/>
-              - SSL-Terminierung durch Coolify
+              - SSL-Terminierung durch Coolify<br/>
+              - ✅ ALLE API-Endpunkte über UI erreichbar!
             </Typography>
           </Box>
 
