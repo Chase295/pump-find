@@ -6,7 +6,7 @@ import type {
   ConfigUpdateResponse
 } from '../types/api';
 
-// API Base URL - immer HTTP für interne API-Kommunikation
+// API Base URL - zur Laufzeit berechnet für dynamische URLs
 const getApiBaseUrl = (): string => {
   // Für lokale Entwicklung ohne Proxy
   if (import.meta.env.DEV) {
@@ -21,11 +21,19 @@ const getApiBaseUrl = (): string => {
   return `http://${currentHost}:${currentPort}`;
 };
 
-const API_BASE_URL = getApiBaseUrl();
+// API_BASE_URL wird dynamisch zur Laufzeit berechnet
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
   timeout: 10000,
+});
+
+// Interceptor um baseURL dynamisch zu setzen
+api.interceptors.request.use((config) => {
+  if (!config.url?.startsWith('http')) {
+    // Wenn keine absolute URL, dann baseURL hinzufügen
+    config.baseURL = getApiBaseUrl();
+  }
+  return config;
 });
 
 // Request Interceptor für Error Handling
@@ -77,7 +85,7 @@ export const pumpApi = {
 
   // Utility Functions
   getApiUrl(): string {
-    return API_BASE_URL;
+    return getApiBaseUrl();
   },
 
   // Health Check mit Timeout für UI
