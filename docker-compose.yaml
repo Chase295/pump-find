@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     # Keine Environment-Variablen - API-URL wird dynamisch ermittelt
     ports:
-      - "3001:80"  # UI auf Port 3001
+      - "3001:80"  # EINZIGER externer Port - UI + API über Reverse Proxy
     depends_on:
       - pump-service
     networks:
@@ -21,15 +21,16 @@ services:
       retries: 3
       start_period: 10s
 
-  # Vereinter Pump-Service
+  # Vereinter Pump-Service (nur intern verfügbar)
   pump-service:
     build:
       context: .
       dockerfile: Dockerfile.unified
     container_name: pump-service
     restart: unless-stopped
-    ports:
-      - "8001:8000"  # API auf Port 8001 verfügbar machen
+    # KEINE exposed ports - nur über Reverse Proxy zugänglich
+    expose:
+      - "8000"  # Intern für pump-ui verfügbar
     environment:
       # Datenbank
       - DB_DSN=postgresql://postgres:9HVxi6hN6j7xpmqUx84o@100.118.155.75:5432/crypto

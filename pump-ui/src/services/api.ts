@@ -40,24 +40,24 @@ api.interceptors.response.use(
 export const pumpApi = {
   // Health Check
   async getHealth(): Promise<HealthResponse> {
-    const response = await api.get('/health');
+    const response = await api.get('/api/health');
     return response.data;
   },
 
   // Configuration Management
   async getConfig(): Promise<ConfigResponse> {
-    const response = await api.get('/config');
+    const response = await api.get('/api/config');
     return response.data;
   },
 
   async updateConfig(config: ConfigUpdateRequest): Promise<ConfigUpdateResponse> {
-    const response = await api.put('/config', config);
+    const response = await api.put('/api/config', config);
     return response.data;
   },
 
   // Prometheus Metrics (als Text)
   async getMetrics(): Promise<string> {
-    const response = await api.get('/metrics', {
+    const response = await api.get('/api/metrics', {
       headers: { 'Accept': 'text/plain' },
       responseType: 'text'
     });
@@ -66,12 +66,12 @@ export const pumpApi = {
 
   // Database Statistics
   async getStreamStats(): Promise<any> {
-    const response = await api.get('/database/streams/stats');
+    const response = await api.get('/api/database/streams/stats');
     return response.data;
   },
 
   async getPhases(): Promise<any> {
-    const response = await api.get('/database/phases');
+    const response = await api.get('/api/database/phases');
     return response.data;
   },
 
@@ -83,7 +83,7 @@ export const pumpApi = {
   // Health Check mit Timeout für UI
   async checkServiceHealth(): Promise<boolean> {
     try {
-      const response = await api.get('/health', { timeout: 5000 });
+      const response = await api.get('/api/health', { timeout: 5000 });
       return response.status === 200;
     } catch {
       return false;
