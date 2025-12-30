@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # 🎯 EINZIGER SERVICE: API + UI auf einem Port
+  pump-unified:
+    build:
+      context: .
+      dockerfile: Dockerfile.professional
+    ports:
+      - "3001:80"
+    env_file:
+      - config/.env
+    environment:
+      # Datenbank
+      - DB_DSN=${DB_DSN}
+      - DB_REFRESH_INTERVAL=${DB_REFRESH_INTERVAL:-10}
+      - DB_RETRY_DELAY=${DB_RETRY_DELAY:-5}
+
+      # WebSocket
+      - WS_URI=${WS_URI}
+      - WS_RETRY_DELAY=${WS_RETRY_DELAY:-3}
+      - WS_MAX_RETRY_DELAY=${WS_MAX_RETRY_DELAY:-60}
+      - WS_PING_INTERVAL=${WS_PING_INTERVAL:-20}
+      - WS_PING_TIMEOUT=${WS_PING_TIMEOUT:-10}
+
+      # Coin Cache
+      - COIN_CACHE_SECONDS=${COIN_CACHE_SECONDS:-300}
+
+      # Spam Filter
+      - BAD_NAMES_PATTERN=${BAD_NAMES_PATTERN}
+
+      # n8n Integration
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+
+      # Batching
+      - BATCH_SIZE=${BATCH_SIZE:-10}
+      - BATCH_TIMEOUT=${BATCH_TIMEOUT:-30}
+
+      # Spam Burst Protection
+      - SPAM_BURST_WINDOW=${SPAM_BURST_WINDOW:-60}
+    volumes:
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: pump-network

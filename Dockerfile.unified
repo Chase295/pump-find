@@ -1,11 +1,12 @@
-# Vereinter Pump Service - Discovery + Metrics
+# Vereinter Pump Service - Discovery + Metrics + UI
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# System-Abhängigkeiten
+# System-Abhängigkeiten (nginx für UI-Serving)
 RUN apt-get update && apt-get install -y \
     curl \
+    nginx \
     && rm -rf /var/lib/apt/lists/*
 
 # Python-Abhängigkeiten
@@ -16,15 +17,29 @@ RUN pip install --no-cache-dir -r requirements.unified.txt
 COPY unified_service.py .
 COPY db_migration.py .
 
+# nginx-Konfiguration für unified service
+COPY nginx.unified.conf /etc/nginx/sites-available/default
+
+# UI-Dateien aus pump-ui/dist kopieren
+# Hinweis: Diese Dateien müssen beim Build verfügbar sein
+# In Produktion: COPY ../pump-ui/dist /var/www/html
+# Für Entwicklung: UI-Dateien werden separat bereitgestellt
+
 # Config-Verzeichnis erstellen
 RUN mkdir -p /app/config
 
-# Port freigeben
-EXPOSE 8000
+# nginx und UI-Dateien für app-user zugänglich machen
+RUN chown -R www-data:www-data /var/www/html \
+    && chown -R www-data:www-data /var/log/nginx \
+    && chown -R www-data:www-data /var/lib/nginx \
+    && chown -R www-data:www-data /run
 
-# Health-Check
+# Port freigeben (nginx auf 80)
+EXPOSE 80
+
+# Health-Check (prüft sowohl API als auch UI)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost/health && curl -f http://localhost/api/health || exit 1
 
-# Start-Kommando (FastAPI mit Uvicorn)
-CMD ["uvicorn", "unified_service:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start-Kommando (FastAPI + nginx)
+CMD ["sh", "-c", "uvicorn unified_service:app --host 127.0.0.1 --port 8000 --workers 1 & nginx -g 'daemon off;'"]
