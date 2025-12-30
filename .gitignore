@@ -41,6 +41,8 @@ service.log
 
 # Config (enthält sensible Daten)
 config/.env
+.env
+!*.env.example
 
 # Node modules
 node_modules/

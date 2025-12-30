@@ -8,9 +8,9 @@ services:
     restart: unless-stopped
     environment:
       # API Base URL zum vereinten Service
-      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_API_BASE_URL=http://localhost:8001
     ports:
-      - "3000:80"  # UI auf Port 3000
+      - "3001:80"  # UI auf Port 3001
     depends_on:
       - pump-service
     networks:
@@ -30,7 +30,7 @@ services:
     container_name: pump-service
     restart: unless-stopped
     ports:
-      - "8000:8000"  # API auf Port 8000 verfügbar machen
+      - "8001:8000"  # API auf Port 8001 verfügbar machen
     environment:
       # Datenbank
       - DB_DSN=postgresql://postgres:9HVxi6hN6j7xpmqUx84o@100.118.155.75:5432/crypto
@@ -66,7 +66,7 @@ services:
       - ATH_FLUSH_INTERVAL=5
 
       # Health-Server
-      - HEALTH_PORT=8000
+      - HEALTH_PORT=8001
 
     volumes:
       - ./config:/app/config:rw
