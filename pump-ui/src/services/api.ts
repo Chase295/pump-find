@@ -6,19 +6,19 @@ import type {
   ConfigUpdateResponse
 } from '../types/api';
 
-// API Base URL - gleiches Protokoll wie UI für Kompatibilität
+// API Base URL - immer HTTP für interne Kommunikation
 const getApiBaseUrl = (): string => {
   // Für lokale Entwicklung ohne Proxy
   if (import.meta.env.DEV) {
     return 'http://localhost:8001';
   }
 
-  // Für Produktion: Gleiches Protokoll wie UI (nginx proxy)
-  const currentProtocol = window.location.protocol;
+  // Für Produktion: Immer HTTP (nginx proxy)
+  // SSL wird vom externen Reverse Proxy (z.B. Coolify) terminiert
   const currentHost = window.location.hostname;
-  const currentPort = window.location.port || (currentProtocol === 'https:' ? '443' : '80');
+  const currentPort = window.location.port || '80';
 
-  return `${currentProtocol}//${currentHost}:${currentPort}`;
+  return `http://${currentHost}:${currentPort}`;
 };
 
 // API_BASE_URL wird dynamisch zur Laufzeit berechnet
