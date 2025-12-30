@@ -6,22 +6,15 @@ import type {
   ConfigUpdateResponse
 } from '../types/api';
 
-// API Base URL - dynamisch basierend auf aktueller Domain und Environment
+// API Base URL - relative Pfade für Proxy über UI-Port
 const getApiBaseUrl = (): string => {
-  // Zuerst Environment Variable prüfen (für Docker-Entwicklung)
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
+  // Für lokale Entwicklung ohne Proxy
+  if (import.meta.env.DEV) {
+    return 'http://localhost:8001';
   }
 
-  // Für Produktion/externen Zugriff: Gleiche Domain, anderer Port
-  // API läuft immer über HTTP (auch wenn UI über HTTPS), da APIs intern sind
-  const currentHost = window.location.hostname;
-
-  // Port-Mapping: UI Port 3001 -> API Port 8001, UI Port 80/443 -> API Port 8000
-  const apiPort = window.location.port === '3001' ? '8001' :
-                  (window.location.protocol === 'https:' ? '8000' : '8000');
-
-  return `http://${currentHost}:${apiPort}`;
+  // Für Produktion: Relative API-Pfade (werden über nginx proxy geleitet)
+  return '';
 };
 
 const API_BASE_URL = getApiBaseUrl();
