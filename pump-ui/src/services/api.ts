@@ -8,12 +8,9 @@ import type {
 
 // API Base URL - immer HTTP für interne Kommunikation
 const getApiBaseUrl = (): string => {
-  // Für Produktion: Immer HTTP (nginx proxy)
-  // SSL wird vom externen Reverse Proxy (z.B. Coolify) terminiert
-  const currentHost = window.location.hostname;
-  const currentPort = window.location.port || '80';
-
-  return `http://${currentHost}:${currentPort}`;
+  // Verwende window.location.origin für korrekte URL-Generierung
+  // Das gibt das komplette Origin zurück (protocol + host + port)
+  return window.location.origin;
 };
 
 // API_BASE_URL wird dynamisch zur Laufzeit berechnet
