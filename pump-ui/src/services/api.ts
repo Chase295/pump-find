@@ -6,15 +6,18 @@ import type {
   ConfigUpdateResponse
 } from '../types/api';
 
-// API Base URL - relative Pfade für Proxy über UI-Port
+// API Base URL - HTTP für alle externen Zugriffe
 const getApiBaseUrl = (): string => {
   // Für lokale Entwicklung ohne Proxy
   if (import.meta.env.DEV) {
     return 'http://localhost:8001';
   }
 
-  // Für Produktion: Relative API-Pfade (werden über nginx proxy geleitet)
-  return '';
+  // Für Produktion: HTTP mit aktueller Domain/IP (nginx proxy)
+  const currentHost = window.location.hostname;
+  const currentPort = window.location.port || '80';
+
+  return `http://${currentHost}:${currentPort}`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
