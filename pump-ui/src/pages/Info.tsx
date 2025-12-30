@@ -615,11 +615,11 @@ const Info: React.FC = () => {
           </Typography>
           <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
-              <strong>API-Base-URL:</strong> http://localhost:8000<br/>
-              <strong>Konfiguration:</strong> VITE_API_BASE_URL=http://localhost:8000<br/>
+              <strong>API-Base-URL:</strong> {window.location.protocol}//{window.location.host}<br/>
+              <strong>Konfiguration:</strong> Dynamisch zur Laufzeit<br/>
               <strong>Protokoll:</strong> HTTP/1.1 + JSON<br/>
               <strong>Timeout:</strong> 10 Sekunden pro Request<br/>
-              <strong>CORS:</strong> Aktiviert für localhost:3000
+              <strong>CORS:</strong> Aktiviert für aktuelle Domain
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>Docker Networking:</strong><br/>
@@ -736,11 +736,11 @@ const Info: React.FC = () => {
           </Typography>
           <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
-              <strong>Base-URL:</strong> http://localhost:8000<br/>
+              <strong>Base-URL:</strong> {window.location.protocol}//{window.location.host}/api<br/>
               <strong>Protokoll:</strong> HTTP/1.1 + RESTful API<br/>
               <strong>Content-Type:</strong> application/json<br/>
               <strong>Authentication:</strong> Keine erforderlich<br/>
-              <strong>CORS:</strong> Aktiviert für localhost:3000<br/>
+              <strong>CORS:</strong> Aktiviert für aktuelle Domain<br/>
               <strong>Rate-Limiting:</strong> Keines implementiert
             </Typography>
           </Box>
@@ -1208,14 +1208,14 @@ const Info: React.FC = () => {
               - Image: python:3.11-slim<br/>
               - Port: 8000 (intern + extern exposed)<br/>
               - Volume: ./config:/app/config:rw<br/>
-              - Health-Check: curl -f http://localhost:8000/health<br/>
+              - Health-Check: curl -f {window.location.protocol}//{window.location.host}/api/health<br/>
               - Restart: unless-stopped
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>Frontend (pump-ui):</strong><br/>
               - Build: node:22-alpine → nginx:alpine<br/>
               - Port: 3000 (nginx serving static files)<br/>
-              - Environment: VITE_API_BASE_URL=http://localhost:8000<br/>
+              - Environment: Dynamisch zur Laufzeit<br/>
               - Health-Check: curl -f http://localhost/health<br/>
               - Restart: unless-stopped
             </Typography>
@@ -1257,12 +1257,12 @@ const Info: React.FC = () => {
               <strong>API nicht erreichbar:</strong><br/>
               - Container läuft? docker ps<br/>
               - Port exposed? docker-compose port pump-service 8000<br/>
-              - API antwortet? curl http://localhost:8000/health
+              - API antwortet? curl {window.location.protocol}//{window.location.host}/api/health
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>UI zeigt "Network Error":</strong><br/>
-              - API-Base-URL: VITE_API_BASE_URL=http://localhost:8000<br/>
-              - CORS-Problem? Backend muss localhost:3000 erlauben<br/>
+              - API-Base-URL: Dynamisch ({window.location.protocol}//{window.location.host})<br/>
+              - CORS-Problem? Backend muss aktuelle Domain erlauben<br/>
               - Container neu gestartet? docker-compose restart
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>

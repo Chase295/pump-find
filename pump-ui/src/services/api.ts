@@ -8,11 +8,6 @@ import type {
 
 // API Base URL - immer HTTP für interne Kommunikation
 const getApiBaseUrl = (): string => {
-  // Für lokale Entwicklung ohne Proxy
-  if (import.meta.env.DEV) {
-    return 'http://localhost:8001';
-  }
-
   // Für Produktion: Immer HTTP (nginx proxy)
   // SSL wird vom externen Reverse Proxy (z.B. Coolify) terminiert
   const currentHost = window.location.hostname;
