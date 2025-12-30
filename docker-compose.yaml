@@ -4,10 +4,13 @@ services:
     build:
       context: ./pump-ui
       dockerfile: Dockerfile
+      args:
+        # API Base URL zum vereinten Service (wird zur Build-Zeit verwendet)
+        - VITE_API_BASE_URL=http://localhost:8001
     container_name: pump-ui
     restart: unless-stopped
     environment:
-      # API Base URL zum vereinten Service
+      # API Base URL zum vereinten Service (für Laufzeit)
       - VITE_API_BASE_URL=http://localhost:8001
     ports:
       - "3001:80"  # UI auf Port 3001

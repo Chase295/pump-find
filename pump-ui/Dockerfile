@@ -6,6 +6,10 @@ WORKDIR /app
 # Environment für Vite
 ENV NODE_ENV=production
 
+# API Base URL als Build-Argument
+ARG VITE_API_BASE_URL=http://localhost:8000
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # Dependencies installieren (inkl. devDependencies für Build)
 COPY package*.json ./
 RUN rm -f package-lock.json && npm install --include=dev
