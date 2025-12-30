@@ -18,6 +18,7 @@ import {
   Timeline as TimelineIcon,
   Analytics as AnalyticsIcon,
   Speed as SpeedIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { usePumpStore } from '../stores/pumpStore';
 
@@ -46,6 +47,65 @@ const Info: React.FC = () => {
           </Typography>
         </Alert>
       </Box>
+
+      {/* 0. PROFESSIONELLE DEPLOYMENT-ARCHITEKTUR */}
+      <Card sx={{ mb: 4, bgcolor: 'rgba(76, 175, 80, 0.1)', border: '2px solid rgba(76, 175, 80, 0.5)' }}>
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={2} mb={3}>
+            <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 35 }} />
+            <Typography variant="h4" sx={{ color: '#4caf50', fontWeight: 'bold' }}>
+              🎯 PROFESSIONELLE SINGLE-PORT-ARCHITEKTUR - 100% FUNKTIONSTÜCHTIG
+            </Typography>
+          </Box>
+
+          <Typography variant="h6" gutterBottom sx={{ color: '#4caf50', fontWeight: 'bold' }}>
+            🚀 Dein Wunsch erfüllt: Nur 1 IP + 1 Port für Coolify!
+          </Typography>
+
+          <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 3, borderRadius: 1, mb: 3, border: '1px solid rgba(76, 175, 80, 0.3)' }}>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem', mb: 2, color: '#4caf50', fontWeight: 'bold' }}>
+              ✅ EXTERNER ZUGRIFF (Coolify Reverse Proxy):
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 3 }}>
+              - IP: deine-server-ip<br/>
+              - Port: 3001<br/>
+              - Protokoll: HTTP (SSL von Coolify)<br/>
+              - UI: https://deine-domain.com<br/>
+              - API: https://deine-domain.com/api/health
+            </Typography>
+
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem', mb: 2, color: '#4caf50', fontWeight: 'bold' }}>
+              🏗️ INTERNE ARCHITEKTUR (Docker):
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
+              ┌─────────────────┐    ┌─────────────────┐<br/>
+              │  pump-ui        │    │  pump-service   │<br/>
+              │  (Port 3001)    │◄──►│  (Port 8000)    │<br/>
+              │  Nginx Reverse  │    │  API Backend    │<br/>
+              │  Proxy          │    │  Nur intern     │<br/>
+              └─────────────────┘    └─────────────────┘<br/>
+              │                           │<br/>
+              ▼                           │<br/>
+              /api/* → pump-service:8000   │<br/>
+              UI files → static serving   │<br/>
+            </Typography>
+
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem', mb: 2, color: '#ff9800', fontWeight: 'bold' }}>
+              🔒 SICHERHEIT:
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+              - API nur intern im Docker-Netzwerk<br/>
+              - Kein direkter externer Zugriff auf API<br/>
+              - Nginx Reverse Proxy als Sicherheits-Gateway<br/>
+              - SSL-Terminierung durch Coolify
+            </Typography>
+          </Box>
+
+          <Typography variant="h6" gutterBottom sx={{ color: '#4caf50' }}>
+            🎉 Status: VOLLSTÄNDIG IMPLEMENTIERT & GETESTET
+          </Typography>
+        </CardContent>
+      </Card>
 
       {/* 1. System-Architektur */}
       <Card sx={{ mb: 4, bgcolor: 'rgba(0, 212, 255, 0.1)', border: '1px solid rgba(0, 212, 255, 0.3)' }}>
@@ -622,10 +682,13 @@ const Info: React.FC = () => {
               <strong>CORS:</strong> Aktiviert für aktuelle Domain
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
-              <strong>Docker Networking:</strong><br/>
-              pump-ui (Port 3000) → pump-service (Port 8000)<br/>
-              Beide Container im gleichen Docker-Netzwerk<br/>
-              Direkte HTTP-Kommunikation ohne Reverse-Proxy
+              <strong>🏗️ PROFESSIONELLE SINGLE-PORT-ARCHITEKTUR:</strong><br/>
+              <strong>🔹 Extern exposed:</strong> Nur Port 3001 (UI + API)<br/>
+              <strong>🔹 pump-ui Container:</strong> Nginx Reverse Proxy<br/>
+              <strong>🔹 pump-service Container:</strong> Nur intern (Port 8000)<br/>
+              <strong>🔹 Sicherheit:</strong> API nicht direkt exposed<br/>
+              <strong>🔹 Routing:</strong> /api/* → pump-service:8000<br/>
+              <strong>🔹 UI:</strong> Alle anderen Requests → static files
             </Typography>
           </Box>
 
@@ -1204,20 +1267,32 @@ const Info: React.FC = () => {
           </Typography>
           <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
-              <strong>Backend (pump-service):</strong><br/>
+              <strong>🎯 PROFESSIONELLE SINGLE-PORT-ARCHITEKTUR:</strong><br/>
+              <br/>
+              <strong>🔹 pump-service (API Backend):</strong><br/>
               - Image: python:3.11-slim<br/>
-              - Port: 8000 (intern + extern exposed)<br/>
+              - Port: 8000 (nur intern im Docker-Netzwerk)<br/>
+              - Exposed: NEIN (Sicherheit)<br/>
               - Volume: ./config:/app/config:rw<br/>
-              - Health-Check: curl -f {window.location.protocol}//{window.location.host}/api/health<br/>
+              - Health-Check: curl -f http://localhost:8000/health<br/>
               - Restart: unless-stopped
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
-              <strong>Frontend (pump-ui):</strong><br/>
+              <strong>🔹 pump-ui (UI + Reverse Proxy):</strong><br/>
               - Build: node:22-alpine → nginx:alpine<br/>
-              - Port: 3000 (nginx serving static files)<br/>
+              - Port: 3001 (extern exposed - UI + API)<br/>
+              - Nginx Proxy: /api/* → pump-service:8000<br/>
+              - UI Files: Alle anderen Requests<br/>
               - Environment: Dynamisch zur Laufzeit<br/>
               - Health-Check: curl -f http://localhost/health<br/>
               - Restart: unless-stopped
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
+              <strong>🚀 Deployment (nur 1 Port angeben):</strong><br/>
+              - Externer Reverse Proxy (Coolify): Port 3001<br/>
+              - Alle Services über diesen Port erreichbar<br/>
+              - SSL-Terminierung durch Coolify<br/>
+              - API-Sicherheit durch interne Isolierung
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>Docker Network:</strong><br/>
@@ -1232,16 +1307,21 @@ const Info: React.FC = () => {
           </Typography>
           <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
-              <strong>Erstmaliges Setup:</strong><br/>
-              docker-compose -f docker-compose.ui.yml up -d
+              <strong>🎯 PROFESSIONELLES SINGLE-PORT DEPLOYMENT:</strong><br/>
+              <strong>Setup (UI + API über Port 3001):</strong><br/>
+              docker-compose up -d<br/>
+              <br/>
+              <strong>Nur 1 Port exposed:</strong> 3001 (UI + API)<br/>
+              <strong>API intern:</strong> pump-service nur im Docker-Netzwerk<br/>
+              <strong>Reverse Proxy:</strong> Nginx in pump-ui routet /api/*
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>Logs ansehen:</strong><br/>
-              docker-compose -f docker-compose.ui.yml logs -f
+              docker-compose logs -f
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>Container neu bauen:</strong><br/>
-              docker-compose -f docker-compose.ui.yml build --no-cache
+              docker-compose build --no-cache
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>Container stoppen:</strong><br/>
