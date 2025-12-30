@@ -49,8 +49,24 @@ export const usePumpStore = create<PumpStore>()(
             isLoading: false
           });
         } catch (error) {
+          // Bei API-Fehlern: Setze Status auf "error" (API unreachable)
+          const disconnectedHealth = {
+            status: 'error' as const,
+            ws_connected: false,
+            db_connected: false,
+            uptime_seconds: 0,
+            last_message_ago: null,
+            reconnect_count: 0,
+            last_error: error instanceof Error ? error.message : 'API unreachable',
+            cache_stats: { total_coins: 0, activated_coins: 0, expired_coins: 0, oldest_age_seconds: 0, newest_age_seconds: 0 },
+            tracking_stats: { active_coins: 0, total_trades: 0, total_metrics_saved: 0 },
+            discovery_stats: { total_coins_discovered: 0, n8n_available: false, n8n_buffer_size: 0 }
+          };
+
           set({
+            health: disconnectedHealth,
             error: error instanceof Error ? error.message : 'Failed to fetch health',
+            lastUpdated: new Date(),
             isLoading: false
           });
         }
@@ -92,11 +108,11 @@ export const usePumpStore = create<PumpStore>()(
       },
 
       startPolling: () => {
-        // Auto-refresh every 30 seconds
+        // Auto-refresh every 5 seconds for faster status updates
         const interval = setInterval(() => {
           get().fetchHealth();
           get().fetchConfig();
-        }, 30000);
+        }, 5000);
 
         // Store interval ID for cleanup
         (get() as any)._pollingInterval = interval;
