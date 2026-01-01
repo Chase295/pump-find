@@ -47,8 +47,8 @@ WS_URI = os.getenv("WS_URI", "wss://pumpportal.fun/api/data")
 WS_RETRY_DELAY = int(os.getenv("WS_RETRY_DELAY", "3"))
 WS_MAX_RETRY_DELAY = int(os.getenv("WS_MAX_RETRY_DELAY", "60"))
 WS_PING_INTERVAL = int(os.getenv("WS_PING_INTERVAL", "20"))
-WS_PING_TIMEOUT = int(os.getenv("WS_PING_TIMEOUT", "10"))
-WS_CONNECTION_TIMEOUT = int(os.getenv("WS_CONNECTION_TIMEOUT", "30"))
+WS_PING_TIMEOUT = int(os.getenv("WS_PING_TIMEOUT", "5"))   # Schnellere Ping-Erkennung
+WS_CONNECTION_TIMEOUT = int(os.getenv("WS_CONNECTION_TIMEOUT", "30"))  # 30s statt 300s - schneller erkennen
 HEALTH_PORT = int(os.getenv("HEALTH_PORT", "8000"))
 
 # Discovery (aus pump-discover)
