@@ -1177,14 +1177,6 @@ class UnifiedService:
             raise
 
     async def get_active_streams(self):
-                unified_status["db_connected"] = False
-                unified_status["last_error"] = f"db_error: {str(e)[:100]}"
-                db_connected.set(0)
-                db_errors.labels(type="connection").inc()
-                print(f"❌ DB Fehler: {e}", flush=True)
-                await asyncio.sleep(DB_RETRY_DELAY)
-
-    async def get_active_streams(self):
         """Lädt aktive Coin-Streams (aus pump-metric)"""
         try:
             with db_query_duration.time():
@@ -1725,12 +1717,44 @@ class UnifiedService:
                     unified_status["last_error"] = None
                     ws_connected.set(1)
                     reconnect_count = 0
+                    unified_status["reconnect_count"] = reconnect_count
 
                     print("✅ WebSocket verbunden! Vereinter Service läuft...", flush=True)
 
                     # subscribeNewToken für Discovery
                     await ws.send(json.dumps({"method": "subscribeNewToken"}))
                     print("📡 subscribeNewToken aktiv - warte auf neue Coins...", flush=True)
+
+                    # BEREITS AKTUELLE SUBSCRIPTIONS WIEDERHERSTELLEN
+                    if self.subscribed_mints:
+                        print(f"🔄 Stelle {len(self.subscribed_mints)} bestehende Subscriptions wieder her...", flush=True)
+                        try:
+                            await ws.send(json.dumps({"method": "subscribeTokenTrade", "keys": list(self.subscribed_mints)}))
+                            print(f"✅ {len(self.subscribed_mints)} aktive Coin-Subscriptions wiederhergestellt", flush=True)
+                            # Metrik aktualisieren
+                            subscriptions_batched_total.inc(len(self.subscribed_mints))
+                        except Exception as e:
+                            print(f"⚠️ Fehler beim Wiederherstellen der Subscriptions: {e}", flush=True)
+                            # Bei Fehler alle Subscriptions als pending markieren
+                            self.pending_subscriptions.update(self.subscribed_mints)
+
+                    # AKTIVE STREAMS AUS DB LADEN FÜR WATCHLIST-SYNC
+                    try:
+                        print("🔍 Lade aktuelle aktive Streams aus DB für Synchronisation...", flush=True)
+                        db_streams = await self.get_active_streams()
+                        current_set = set(db_streams.keys())
+
+                        # Neue aktive Coins hinzufügen (die noch nicht subscribed sind)
+                        to_add = current_set - self.subscribed_mints
+                        if to_add:
+                            print(f"➕ Füge {len(to_add)} neue aktive Coins zur Subscription hinzu...", flush=True)
+                            for mint in to_add:
+                                self.pending_subscriptions.add(mint)
+
+                        print(f"📊 DB-Sync: {len(current_set)} aktive Streams, {len(self.subscribed_mints)} subscribed, {len(self.pending_subscriptions)} pending", flush=True)
+
+                    except Exception as e:
+                        print(f"⚠️ Fehler beim Laden aktiver Streams: {e}", flush=True)
 
                     # Batching-Task starten
                     self.batching_task = asyncio.create_task(self.run_subscription_batching_task(ws))
@@ -1820,7 +1844,8 @@ class UnifiedService:
                                         self.coin_cache.add_trade(mint, data)
 
                         except asyncio.TimeoutError:
-                            if time.time() - last_message_time > WS_CONNECTION_TIMEOUT:
+                            # Prüfe nur alle 30 Sekunden auf Timeout (nicht bei jedem recv timeout)
+                            if now_ts - last_message_time > WS_CONNECTION_TIMEOUT and now_ts % 30 < 1:
                                 print(f"⚠️ Keine Nachrichten seit {WS_CONNECTION_TIMEOUT}s - Reconnect", flush=True)
                                 raise websockets.exceptions.ConnectionClosed(1006, "Timeout")
 
@@ -1829,8 +1854,14 @@ class UnifiedService:
                             unified_status["ws_connected"] = False
                             unified_status["last_error"] = f"ws_closed: {str(e)[:100]}"
                             ws_connected.set(0)
+                            # Batching-Task ordnungsgemäß beenden
                             if self.batching_task and not self.batching_task.done():
+                                print("🛑 Beende Batching-Task...", flush=True)
                                 self.batching_task.cancel()
+                                try:
+                                    await self.batching_task
+                                except asyncio.CancelledError:
+                                    pass
                             break
 
                         except json.JSONDecodeError as e:
