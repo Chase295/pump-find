@@ -42,8 +42,8 @@ DB_DSN = os.getenv("DB_DSN", "postgresql://postgres:9HVxi6hN6j7xpmqUx84o@100.118
 DB_REFRESH_INTERVAL = int(os.getenv("DB_REFRESH_INTERVAL", "10"))
 DB_RETRY_DELAY = int(os.getenv("DB_RETRY_DELAY", "5"))
 
-# WebSocket (gemeinsam)
-WS_URI = os.getenv("WS_URI", "wss://pumpportal.fun/api/data")
+# WebSocket (gemeinsam) - DEAKTIVIERT wegen API-Änderung
+WS_URI = os.getenv("WS_URI", "wss://pumpportal.fun/api/data")  # Temporär deaktiviert
 WS_RETRY_DELAY = int(os.getenv("WS_RETRY_DELAY", "3"))
 WS_MAX_RETRY_DELAY = int(os.getenv("WS_MAX_RETRY_DELAY", "60"))
 WS_PING_INTERVAL = int(os.getenv("WS_PING_INTERVAL", "20"))
@@ -934,24 +934,43 @@ async def get_streams_stats():
 
 
 @app.get("/database/metrics")
-async def get_recent_metrics(limit: int = 100):
-    """Gibt die letzten Metriken aus der coin_metrics Tabelle zurück"""
+async def get_recent_metrics(limit: int = 100, mint: Optional[str] = None):
+    """Gibt die letzten Metriken aus der coin_metrics Tabelle zurück
+
+    Query-Parameter:
+    - limit: Anzahl der zurückzugebenden Einträge (Standard: 100)
+    - mint: Optional - Filter nach spezifischem Token-Mint (z.B. für historische Daten eines Coins)
+    """
     try:
         if not _unified_instance or not _unified_instance.pool:
             raise HTTPException(status_code=503, detail="Database not connected")
 
-        rows = await _unified_instance.pool.fetch("""
-            SELECT * FROM coin_metrics
-            ORDER BY timestamp DESC
-            LIMIT $1
-        """, limit)
+        # Baue die Query dynamisch auf
+        query = "SELECT * FROM coin_metrics"
+        params = []
+
+        # Füge WHERE-Klausel hinzu, wenn mint angegeben ist
+        if mint and mint.strip():
+            query += " WHERE mint = $1"
+            params.append(mint.strip())
+
+        # Sortierung und Limit
+        if params:
+            query += " ORDER BY timestamp DESC LIMIT $2"
+            params.append(limit)
+        else:
+            query += " ORDER BY timestamp DESC LIMIT $1"
+            params.append(limit)
+
+        rows = await _unified_instance.pool.fetch(query, *params)
 
         metrics = [dict(row) for row in rows]
 
         return {
             "metrics": metrics,
             "count": len(metrics),
-            "limit": limit
+            "limit": limit,
+            "mint_filter": mint  # Zeige angewendeten Filter in Response
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")

@@ -597,13 +597,16 @@ const Info: React.FC = () => {
           </Box>
 
           <Typography variant="h6" sx={{ mb: 2, color: '#4caf50' }}>
-            📉 GET /api/database/metrics?limit=100 - Historische Metriken
+            📉 GET /api/database/metrics?limit=100&amp;mint=[TOKEN] - Historische Metriken
           </Typography>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            <strong>Funktion:</strong> Zeitreihen-Daten für Preis, Volumen und Marktanalyse.
+            <strong>Funktion:</strong> Zeitreihen-Daten für Preis, Volumen und Marktanalyse. Unterstützt Filter nach spezifischem Coin.
           </Typography>
           <Typography variant="body2" sx={{ mb: 2 }}>
             <strong>Datenquelle:</strong> <code>coin_metrics</code> Tabelle mit OHLCV-Daten.
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            <strong>Parameter:</strong> limit (Standard: 100), mint (optional für Coin-Filter).
           </Typography>
           <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
@@ -999,9 +1002,14 @@ const Info: React.FC = () => {
           <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>Funktion:</strong> Zeitreihen-Daten für Analyse<br/>
-              <strong>Parameter:</strong> limit=100 (Standard)<br/>
+              <strong>Parameter:</strong><br/>
+              &nbsp;&nbsp;• limit=100 (Standard) - Anzahl der Einträge<br/>
+              &nbsp;&nbsp;• mint=[TOKEN_ADDRESS] (Optional) - Filter nach spezifischem Coin<br/>
               <strong>Datenbank:</strong> coin_metrics Tabelle<br/>
-              <strong>UI-Verwendung:</strong> Nicht implementiert (zukünftig)
+              <strong>UI-Verwendung:</strong> Nicht implementiert (zukünftig)<br/>
+              <strong>Beispiele:</strong><br/>
+              &nbsp;&nbsp;• Alle Coins: /database/metrics?limit=50<br/>
+              &nbsp;&nbsp;• Spezifischer Coin: /database/metrics?mint=91WNez8D22NwBssQbkzjy4s2ipFrzpmn5hfvWVe2aY5p&amp;limit=100
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
               <strong>Response-Schema:</strong><br/>
