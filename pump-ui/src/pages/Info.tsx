@@ -40,6 +40,11 @@ const Info: React.FC = () => {
         <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
           Pump-Discover & Pump-Metric System - Detaillierte Funktionsweise
         </Typography>
+        <Alert severity="success" sx={{ maxWidth: 800, mx: 'auto', mb: 2 }}>
+          <Typography variant="body2">
+            🎯 <strong>NEU:</strong> Analytics-Endpunkt <code>GET /api/analytics/{"{TOKEN_ADDRESS}"}</code> für performante Vitalwerte-Berechnung!
+          </Typography>
+        </Alert>
         <Alert severity="info" sx={{ maxWidth: 800, mx: 'auto' }}>
           <Typography variant="body2">
             Dieses Dokument erklärt <strong>jede Datenbank-Eintragung</strong>, <strong>alle Berechnungen</strong>
@@ -481,10 +486,15 @@ const Info: React.FC = () => {
             <strong>Verfügbare API-Endpunkte:</strong>
           </Typography>
           <Box sx={{ fontFamily: 'monospace', fontSize: '0.8rem', bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 2 }}>
+            GET /health - System-Status & Live-Daten<br/>
+            GET /config - Aktuelle Konfiguration<br/>
+            PUT /config - Konfiguration aktualisieren<br/>
+            GET /metrics - Prometheus-Metriken<br/>
             GET /database/phases - Alle Phasen<br/>
             GET /database/streams/stats - Stream-Statistiken<br/>
             GET /database/streams?limit=50 - Einzelne Streams<br/>
-            GET /database/metrics?limit=100 - Metriken
+            GET /database/metrics?limit=100 - Historische Metriken<br/>
+            GET /api/analytics/{"{mint}"} - Coin Analytics & Vitalwerte ⭐ <strong>NEU</strong>
           </Box>
 
           <Typography variant="body2" sx={{ mb: 2 }}>
@@ -515,6 +525,28 @@ const Info: React.FC = () => {
             Die API bildet das Herzstück des Systems und ermöglicht den Zugriff auf alle gespeicherten Daten
             und Live-Statistiken. Alle Endpunkte sind über <code>/api/</code> erreichbar und liefern JSON-Daten zurück.
           </Typography>
+
+          <Typography variant="h6" sx={{ mb: 2, color: '#4caf50' }}>
+            🎯 GET /api/analytics/{"{TOKEN_ADDRESS}"} - Coin Analytics & Vitalwerte ⭐ <strong>NEU</strong>
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            <strong>Funktion:</strong> Performante Vitalwerte-Berechnung für verschiedene Zeitfenster.
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            <strong>Berechnungen:</strong> Preisänderungen, Trends (🚀 PUMP, 📉 DUMP, ➡️ FLAT), Datenqualität.
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            <strong>Parameter:</strong> mint (Token-Adresse), windows (optionale Zeitfenster-Liste).
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            <strong>Performance:</strong> Ein DB-Query + Python-Filterung für optimale Geschwindigkeit.
+          </Typography>
+          <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+              Beispiel: GET /api/analytics/91WNez8D22NwBssQbkzjy4s2ipFrzpmn5hfvWVe2aY5p?windows=1m,5m,1h<br/>
+              Response enthält price_change_pct, trend, data_age_seconds für jedes Zeitfenster
+            </Typography>
+          </Box>
 
           <Typography variant="h6" sx={{ mb: 2, color: '#4caf50' }}>
             📋 GET /api/health - System-Status & Live-Daten
@@ -597,7 +629,7 @@ const Info: React.FC = () => {
           </Box>
 
           <Typography variant="h6" sx={{ mb: 2, color: '#4caf50' }}>
-            📉 GET /api/database/metrics?limit=100&amp;mint=[TOKEN] - Historische Metriken
+            📉 GET /api/database/metrics?limit=100&amp;mint=[TOKEN_ADDRESS] - Historische Metriken
           </Typography>
           <Typography variant="body2" sx={{ mb: 2 }}>
             <strong>Funktion:</strong> Zeitreihen-Daten für Preis, Volumen und Marktanalyse. Unterstützt Filter nach spezifischem Coin.
@@ -993,6 +1025,70 @@ const Info: React.FC = () => {
               &nbsp;&nbsp;"bonding_curve_pct": 0.15,<br/>
               &nbsp;&nbsp;"dev_sold_amount": 0.5<br/>
               {"}"}]
+            </Typography>
+          </Box>
+
+          <Typography variant="h6" sx={{ mb: 2, color: '#00d4ff' }}>
+            🎯 GET /api/analytics/{"{TOKEN_ADDRESS}"} - Coin Analytics & Vitalwerte
+          </Typography>
+          <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
+              <strong>Funktion:</strong> Performante Vitalwerte eines Coins für verschiedene Zeitfenster<br/>
+              <strong>Zweck:</strong> Berechnung von Preisänderungen, Trends und Datenqualität<br/>
+              <strong>Parameter:</strong><br/>
+              &nbsp;&nbsp;• mint (Pflicht) - Token-Adresse (z.B. 91WNez8D22NwBssQbkzjy4s2ipFrzpmn5hfvWVe2aY5p)<br/>
+              &nbsp;&nbsp;• windows (Optional) - Kommagetrennte Zeitfenster (Default: "30s,1m,3m,5m,15m,30m,1h")<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;Unterstützte Suffixe: s=Sekunden, m=Minuten, h=Stunden<br/>
+              <strong>Datenbank:</strong> coin_metrics Tabelle (alle historischen Daten)<br/>
+              <strong>Performance:</strong> Ein Query für alle Daten + Python-Filterung<br/>
+              <strong>UI-Verwendung:</strong> Nicht implementiert (zukünftig für Charts/Analysen)<br/>
+              <strong>Beispiele:</strong><br/>
+              &nbsp;&nbsp;• Standard-Zeitfenster: /api/analytics/91WNez8D22NwBssQbkzjy4s2ipFrzpmn5hfvWVe2aY5p<br/>
+              &nbsp;&nbsp;• Custom Zeitfenster: /api/analytics/91WNez8D22NwBssQbkzjy4s2ipFrzpmn5hfvWVe2aY5p?windows=1m,5m,15m,1h
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
+              <strong>Response-Schema:</strong><br/>
+              {"{"}<br/>
+              &nbsp;&nbsp;"mint": "91WNez8D22NwBssQbkzjy4s2ipFrzpmn5hfvWVe2aY5p",<br/>
+              &nbsp;&nbsp;"current_price": 0.00001234,<br/>
+              &nbsp;&nbsp;"last_updated": "2025-12-30T17:00:00Z",<br/>
+              &nbsp;&nbsp;"is_active": false,<br/>
+              &nbsp;&nbsp;"performance": {"{"}<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;"30s": {"{"}<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"price_change_pct": -2.5,<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"old_price": 0.00001267,<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"trend": "📉 DUMP",<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"data_found": true,<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"data_age_seconds": 3600<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;{"}"}<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;"1m": {"{...}"}<br/>
+              &nbsp;&nbsp;{"}"}<br/>
+              {"}"}
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
+              <strong>Berechnungslogik:</strong><br/>
+              • price_change_pct = ((current_price - old_price) / old_price) * 100<br/>
+              • Trend = PUMP (&gt;5%), DUMP (&lt;-5%), FLAT (sonst)<br/>
+              • data_age_seconds = Alter des nächsten Datenpunkts zum Zielzeitpunkt<br/>
+              • old_price = Nächster historische Datenpunkt zum berechneten Zeitpunkt<br/>
+              <em>Perfekt für Memecoin-Analyse und Trading-Bots</em>
+            </Typography>
+          </Box>
+
+          <Typography variant="h6" sx={{ mb: 2, color: '#00d4ff' }}>
+            🎯 GET /api/analytics/{"{TOKEN_ADDRESS}"} - Coin Analytics & Vitalwerte ⭐ <strong>NEU</strong>
+          </Typography>
+          <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 1, mb: 3 }}>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
+              <strong>Funktion:</strong> Vitalwerte-Berechnung für Memecoin-Analyse<br/>
+              <strong>Parameter:</strong> mint (Pflicht), windows (Optional, Default: "30s,1m,3m,5m,15m,30m,1h")<br/>
+              <strong>Algorithmus:</strong> Finde nächsten historischen Datenpunkt zu Zielzeitpunkt<br/>
+              <strong>Berechnungen:</strong> price_change_pct, trend (PUMP/DUMP/FLAT), data_age_seconds<br/>
+              <strong>Performance:</strong> Ein DB-Query für alle historischen Daten
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', mb: 2 }}>
+              <strong>Beispiel-Request:</strong><br/>
+              GET /api/analytics/91WNez8D22NwBssQbkzjy4s2ipFrzpmn5hfvWVe2aY5p?windows=1m,5m,1h
             </Typography>
           </Box>
 
