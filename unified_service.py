@@ -975,6 +975,142 @@ async def get_recent_metrics(limit: int = 100, mint: Optional[str] = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
 
+# Analytics-Endpoint wird später implementiert
+
+# === HELPER FUNCTIONS FOR ANALYTICS ===
+
+def parse_time_windows(windows_str: str) -> dict:
+    """Parse Zeitfenster-String in Dictionary mit Sekunden-Werten"""
+    windows = {}
+    for window in windows_str.split(','):
+        window = window.strip()
+        if not window:
+            continue
+
+        # Parse Suffix
+        if window.endswith('s'):
+            seconds = int(window[:-1])
+        elif window.endswith('m'):
+            seconds = int(window[:-1]) * 60
+        elif window.endswith('h'):
+            seconds = int(window[:-1]) * 3600
+        else:
+            # Fallback: Minuten
+            seconds = int(window) * 60
+
+        windows[window] = {'seconds': seconds}
+
+    return windows
+
+async def check_coin_active_status(mint: str) -> bool:
+    """Prüfe ob Coin in aktiven Streams ist"""
+    try:
+        if not _unified_instance or not _unified_instance.pool:
+            return False
+
+        row = await _unified_instance.pool.fetchrow(
+            "SELECT is_active FROM coin_streams WHERE token_address = $1",
+            mint
+        )
+        return row['is_active'] if row else False
+    except Exception as e:
+        print(f"[Analytics] Error checking active status for {mint}: {e}", flush=True)
+        return False
+
+async def get_current_coin_data(mint: str) -> dict:
+    """Hole neueste Daten für einen Coin"""
+    if not _unified_instance or not _unified_instance.pool:
+        return None
+
+    try:
+        row = await _unified_instance.pool.fetchrow(
+            "SELECT * FROM coin_metrics WHERE mint = $1 ORDER BY timestamp DESC LIMIT 1",
+            mint
+        )
+        return dict(row) if row else None
+    except Exception as e:
+        print(f"[Analytics] Error getting current data for {mint}: {e}", flush=True)
+        return None
+
+async def get_historical_data(mint: str, max_seconds: int) -> list:
+    """Hole historische Daten für Zeitfenster-Analyse"""
+    if not _unified_instance or not _unified_instance.pool:
+        return []
+
+    try:
+        # Hole alle verfügbaren Daten für diesen Coin (letzte 24h minimum)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=max(max_seconds, 86400))
+
+        rows = await _unified_instance.pool.fetch(
+            "SELECT * FROM coin_metrics WHERE mint = $1 AND timestamp >= $2 ORDER BY timestamp ASC",
+            mint, cutoff_time
+        )
+
+        historical_data = [dict(row) for row in rows]
+        print(f"[Analytics] Loaded {len(historical_data)} historical data points for {mint}", flush=True)
+
+        return historical_data
+    except Exception as e:
+        print(f"[Analytics] Error getting historical data for {mint}: {e}", flush=True)
+        return []
+
+def calculate_window_analytics(current_data: dict, historical_data: list, target_time: datetime) -> dict:
+    """Berechne Analytics für ein spezifisches Zeitfenster"""
+    if not historical_data:
+        return {
+            "price_change_pct": None,
+            "old_price": None,
+            "trend": "❓ NO_DATA",
+            "data_found": False,
+            "data_age_seconds": None
+        }
+
+    # Finde den nächsten Datenpunkt zum Zielzeitpunkt
+    best_match = None
+    best_diff = float('inf')
+
+    for data_point in historical_data:
+        diff = abs((data_point['timestamp'] - target_time).total_seconds())
+        if diff < best_diff:
+            best_diff = diff
+            best_match = data_point
+
+    if not best_match:
+        return {
+            "price_change_pct": None,
+            "old_price": None,
+            "trend": "❓ NO_DATA",
+            "data_found": False,
+            "data_age_seconds": None
+        }
+
+    # Berechnungen
+    current_price = current_data['price_close']
+    old_price = best_match['price_close']
+
+    if old_price and old_price > 0:
+        price_change_pct = ((current_price - old_price) / old_price) * 100
+    else:
+        price_change_pct = None
+
+    # Trend basierend auf Preisänderung
+    if price_change_pct is None:
+        trend = "❓ NO_DATA"
+    elif price_change_pct > 5:
+        trend = "🚀 PUMP"
+    elif price_change_pct < -5:
+        trend = "📉 DUMP"
+    else:
+        trend = "➡️ FLAT"
+
+    return {
+        "price_change_pct": round(price_change_pct, 2) if price_change_pct is not None else None,
+        "old_price": old_price,
+        "trend": trend,
+        "data_found": True,
+        "data_age_seconds": int(best_diff)
+    }
+
 # === N8N INTEGRATION (FastAPI-Version mit httpx) ===
 import httpx
 
@@ -1112,6 +1248,12 @@ class UnifiedService:
         self.ath_cache = {}  # {mint: ath_price}
         self.dirty_aths = set()
         self.last_ath_flush = time.time()
+
+        # Zombie-Coin Detection & Watchdog
+        self.last_trade_timestamps = {}  # {mint: timestamp}
+        self.subscription_watchdog = {}  # {mint: last_heartbeat}
+        self.stale_data_warnings = {}  # {mint: warning_count}
+        self.last_saved_signatures = {}  # {mint: last_saved_data_signature}
 
         # WebSocket Batching (aus pump-metric)
         self.pending_subscriptions = set()
@@ -1407,6 +1549,7 @@ class UnifiedService:
 
         entry = self.watchlist[mint]
         buf = entry["buffer"]
+        now_ts = time.time()
 
         try:
             sol = float(data["solAmount"])
@@ -1415,6 +1558,12 @@ class UnifiedService:
             trader_key = data.get("traderPublicKey", "")
         except:
             return
+
+        # === ZOMBIE DETECTION: Trade-Timestamp tracken ===
+        self.last_trade_timestamps[mint] = now_ts
+        self.subscription_watchdog[mint] = now_ts
+
+        print(f"[Trade] {mint[:8]}... @ {price:.2e} SOL - {'BUY' if is_buy else 'SELL'} {sol:.6f} SOL", flush=True)
 
         # ATH-Tracking
         known_ath = self.ath_cache.get(mint, 0.0)
@@ -1452,6 +1601,53 @@ class UnifiedService:
         buf["wallets"].add(trader_key)
         buf["v_sol"] = float(data["vSolInBondingCurve"])
         buf["mcap"] = price * 1_000_000_000
+
+    async def check_subscription_watchdog(self, now_ts):
+        """Watchdog: Prüfe alle aktiven Coins auf zu lange Inaktivität"""
+        inactive_coins = []
+
+        for mint, entry in self.watchlist.items():
+            last_trade = self.last_trade_timestamps.get(mint, 0)
+            time_since_trade = now_ts - last_trade
+
+            # 10 Minuten ohne Trades = kritisch
+            if time_since_trade > 600:  # 10 Minuten
+                inactive_coins.append((mint, time_since_trade))
+
+        if inactive_coins:
+            print(f"[Watchdog] 🚨 {len(inactive_coins)} Coins ohne Trades seit >10 Min!", flush=True)
+            for mint, inactive_time in inactive_coins:
+                print(f"[Watchdog]   {mint[:8]}... - {inactive_time:.0f}s ohne Trades", flush=True)
+                await self.force_resubscribe(mint)
+
+    async def force_resubscribe(self, mint):
+        """Force re-subscribe für einen Coin um WebSocket-Verbindung zu erneuern"""
+        if mint not in self.watchlist:
+            return
+
+        try:
+            # Sende unsubscribe + subscribe über bestehende WebSocket-Verbindung
+            if hasattr(self, 'websocket') and self.websocket:
+                print(f"[WebSocket] Force Re-Subscribe für {mint[:8]}...", flush=True)
+
+                # Unsubscribe
+                unsubscribe_msg = {"method": "unsubscribeTokenTrade", "keys": [mint]}
+                await self.websocket.send(json.dumps(unsubscribe_msg))
+                await asyncio.sleep(0.1)  # Kurze Pause
+
+                # Subscribe
+                subscribe_msg = {"method": "subscribeTokenTrade", "keys": [mint]}
+                await self.websocket.send(json.dumps(subscribe_msg))
+
+                # Reset watchdog
+                self.subscription_watchdog[mint] = time.time()
+
+                print(f"[WebSocket] ✓ Re-Subscription gesendet für {mint[:8]}...", flush=True)
+            else:
+                print(f"[WebSocket] ❌ Keine aktive WebSocket-Verbindung für Re-Subscribe {mint[:8]}...", flush=True)
+
+        except Exception as e:
+            print(f"[WebSocket] ❌ Fehler bei Re-Subscribe für {mint[:8]}...: {e}", flush=True)
 
     async def flush_ath_updates(self):
         """Schreibt ATH-Updates in DB (aus pump-metric)"""
@@ -1612,15 +1808,49 @@ class UnifiedService:
                     await self.stop_tracking(mint, is_graduation=False)
                     continue
                 else:
+                    print(f"[Phase] {mint[:8]}... - Wechsel von Phase {current_pid} zu {next_pid}", flush=True)
                     await self.switch_phase(mint, current_pid, next_pid)
                     entry["meta"]["phase_id"] = next_pid
                     new_interval = self.phases_config[next_pid]["interval"]
                     entry["interval"] = new_interval
                     entry["next_flush"] = now_ts + new_interval
 
-            # Metric-Flush
+                    # === PHASE TRANSITION FIX: Sicherstellen dass Subscription erhalten bleibt ===
+                    print(f"[WebSocket] {mint[:8]}... - Phase-Wechsel: Subscription-Check", flush=True)
+                    # Force re-subscribe nach Phase-Wechsel um sicherzustellen
+                    await self.force_resubscribe(mint)
+
+            # === ZOMBIE DETECTION: Metric-Flush mit Stale Data Check ===
             if now_ts >= entry["next_flush"]:
+                # Watchdog-Check: Wann kam der letzte Trade?
+                last_trade = self.last_trade_timestamps.get(mint, 0)
+                time_since_last_trade = now_ts - last_trade
+                is_stale = time_since_last_trade > 300  # 5 Minuten ohne Trades = verdächtig
+
+                # Stale Data Detection: Speichere nur wenn sich Daten geändert haben
+                should_save = False
                 if buf["vol"] > 0:
+                    # Prüfe ob sich die Daten seit dem letzten Speichern geändert haben
+                    last_saved_signature = self.last_saved_signatures.get(mint)
+                    current_signature = f"{buf['close']:.10f}_{buf['vol']:.6f}_{buf['buys'] + buf['sells']}"
+
+                    if last_saved_signature != current_signature:
+                        should_save = True
+                        self.last_saved_signatures[mint] = current_signature
+                    else:
+                        # Daten sind identisch zum letzten Mal - ZOMBIE ALERT!
+                        warning_count = self.stale_data_warnings.get(mint, 0) + 1
+                        self.stale_data_warnings[mint] = warning_count
+
+                        if warning_count <= 3:  # Logge nur die ersten 3 Male
+                            print(f"⚠️  [Zombie Alert] {mint[:8]}... - Identische Daten seit {warning_count} Speicherungen!", flush=True)
+
+                        # Watchdog: Re-subscribe wenn zu lange keine Trades
+                        if is_stale and warning_count >= 2:
+                            print(f"🚨 [Watchdog] {mint[:8]}... - Keine Trades seit {time_since_last_trade:.0f}s - Trigger Re-Subscription!", flush=True)
+                            await self.force_resubscribe(mint)
+
+                if should_save:
                     is_koth = buf["mcap"] > 30000
 
                     # Erweiterte Metriken berechnen
@@ -1641,6 +1871,13 @@ class UnifiedService:
                     ))
                     phases_in_batch.append(entry["meta"]["phase_id"])
 
+                    print(f"[Metrics] {mint[:8]}... - Speichere {buf['buys'] + buf['sells']} Trades, Vol: {buf['vol']:.1f} SOL", flush=True)
+
+                    # Reset warning counter bei erfolgreichem Save
+                    if mint in self.stale_data_warnings:
+                        del self.stale_data_warnings[mint]
+
+                # Buffer immer zurücksetzen (auch bei no-save)
                 entry["buffer"] = self.get_empty_buffer()
                 entry["next_flush"] = now_ts + entry["interval"]
 
@@ -1730,6 +1967,9 @@ class UnifiedService:
                     compression=None,
                     ssl=ssl_context  # Benutzerdefinierter SSL-Kontext
                 ) as ws:
+
+                    # WebSocket-Referenz für Re-Subscribe setzen
+                    self.websocket = ws
 
                     unified_status["ws_connected"] = True
                     unified_status["connection_start"] = time.time()
@@ -1905,6 +2145,10 @@ class UnifiedService:
                         # Lifecycle-Checks und Metric-Flush
                         await self.check_lifecycle_and_flush(now_ts)
 
+                        # === ZOMBIE WATCHDOG: Regelmäßige Subscription-Checks ===
+                        if int(now_ts) % 60 == 0:  # Alle 60 Sekunden
+                            await self.check_subscription_watchdog(now_ts)
+
                         # ATH-Updates
                         if now_ts - self.last_ath_flush > ATH_FLUSH_INTERVAL:
                             await self.flush_ath_updates()
@@ -1917,6 +2161,8 @@ class UnifiedService:
                 unified_status["last_error"] = f"ws_exception: {str(e)[:100]}"
                 ws_connected.set(0)
                 ws_reconnects.inc()
+                # WebSocket-Referenz zurücksetzen
+                self.websocket = None
                 print(f"❌ WebSocket Exception: {e}", flush=True)
                 reconnect_count += 1
                 unified_status["reconnect_count"] = reconnect_count
@@ -1926,6 +2172,8 @@ class UnifiedService:
                 unified_status["last_error"] = f"unexpected: {str(e)[:100]}"
                 ws_connected.set(0)
                 ws_reconnects.inc()
+                # WebSocket-Referenz zurücksetzen
+                self.websocket = None
                 print(f"❌ Unerwarteter Fehler: {e}", flush=True)
                 reconnect_count += 1
                 unified_status["reconnect_count"] = reconnect_count
