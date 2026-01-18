@@ -975,7 +975,7 @@ async def get_recent_metrics(limit: int = 100, mint: Optional[str] = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
 
-# Analytics-Endpoint wird später implementiert
+# Analytics-Routen vorübergehend deaktiviert
 
 # === HELPER FUNCTIONS FOR ANALYTICS ===
 
