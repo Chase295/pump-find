@@ -32,7 +32,7 @@ services:
       - "8000"  # Intern für pump-ui verfügbar
     environment:
       # Datenbank
-      - DB_DSN=postgresql://postgres:9HVxi6hN6j7xpmqUx84o@100.118.155.75:5432/crypto
+      - DB_DSN=postgresql://postgres:yc58TlS4Cz1j%26HHoy%25Oa@komodo.chase295.lo:5432/crypto_db
 
       # WebSocket
       - WS_URI=wss://pumpportal.fun/api/data
@@ -43,7 +43,7 @@ services:
       - WS_CONNECTION_TIMEOUT=30
 
       # Discovery (aus pump-discover)
-      - N8N_WEBHOOK_URL=https://n8n-ai.chase295.de/webhook/pump-discover-beta
+      - N8N_WEBHOOK_URL=https://n8n.local.chase295.de/webhook/pump-discover-beta
       - N8N_WEBHOOK_METHOD=POST
       - N8N_RETRY_DELAY=5
       - BATCH_SIZE=10
