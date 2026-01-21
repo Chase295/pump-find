@@ -38,7 +38,7 @@ from db_migration import check_and_create_schema
 # Kombiniert aus pump-discover und pump-metric
 
 # Datenbank (aus pump-metric)
-DB_DSN = os.getenv("DB_DSN", "postgresql://postgres:9HVxi6hN6j7xpmqUx84o@100.118.155.75:5432/crypto")
+DB_DSN = os.getenv("DB_DSN", "postgresql://postgres:yc58TlS4Cz1j&HHoy%Oa@komodo.chase295.lo:5432/crypto_db")
 DB_REFRESH_INTERVAL = int(os.getenv("DB_REFRESH_INTERVAL", "10"))
 DB_RETRY_DELAY = int(os.getenv("DB_RETRY_DELAY", "5"))
 

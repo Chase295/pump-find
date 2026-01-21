@@ -32,7 +32,7 @@ services:
       - "8000"  # Intern für pump-ui verfügbar
     environment:
       # Datenbank
-      - DB_DSN=postgresql://postgres:yc58TlS4Cz1j%26HHoy%25Oa@komodo.chase295.lo:5432/crypto_db
+      - DB_DSN=postgresql://postgres:yc58TlS4Cz1j&HHoy%Oa@komodo.chase295.lo:5432/crypto_db
 
       # WebSocket
       - WS_URI=wss://pumpportal.fun/api/data
