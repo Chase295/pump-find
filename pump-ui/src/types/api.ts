@@ -69,6 +69,49 @@ export interface ConfigUpdateResponse {
   new_config: Partial<ConfigUpdateRequest>;
 }
 
+// Phase Types
+export interface Phase {
+  id: number;
+  name: string;
+  interval_seconds: number;
+  min_age_minutes: number;
+  max_age_minutes: number;
+}
+
+export interface PhaseUpdateRequest {
+  name?: string;
+  interval_seconds?: number;
+  min_age_minutes?: number;
+  max_age_minutes?: number;
+}
+
+export interface PhaseUpdateResponse {
+  status: string;
+  message: string;
+  phase: Phase;
+  updated_streams: number;
+}
+
+export interface PhaseCreateRequest {
+  name: string;
+  interval_seconds: number;
+  min_age_minutes: number;
+  max_age_minutes: number;
+}
+
+export interface PhaseCreateResponse {
+  status: string;
+  message: string;
+  phase: Phase;
+}
+
+export interface PhaseDeleteResponse {
+  status: string;
+  message: string;
+  deleted_phase_id: number;
+  affected_streams: number;
+}
+
 // Service Status Types
 export type ServiceStatus = 'running' | 'stopped' | 'error' | 'unknown';
 

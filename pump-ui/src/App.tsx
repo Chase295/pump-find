@@ -23,6 +23,7 @@ import {
   Analytics as MetricsIcon,
   Info as InfoIcon,
   Menu as MenuIcon,
+  Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 
 // Pages
@@ -31,6 +32,7 @@ import Config from './pages/Config';
 import Logs from './pages/Logs';
 import Metrics from './pages/Metrics';
 import Info from './pages/Info';
+import Phases from './pages/Phases';
 
 // Theme
 const theme = createTheme({
@@ -68,6 +70,7 @@ const theme = createTheme({
 const navItems = [
   { path: '/', label: 'Dashboard', icon: <DashboardIcon /> },
   { path: '/metrics', label: 'Metriken', icon: <MetricsIcon /> },
+  { path: '/phases', label: 'Phasen', icon: <ScheduleIcon /> },
   { path: '/info', label: 'Info', icon: <InfoIcon /> },
   { path: '/config', label: 'Konfiguration', icon: <SettingsIcon /> },
   { path: '/logs', label: 'Logs', icon: <LogsIcon /> },
@@ -231,6 +234,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/metrics" element={<Metrics />} />
+            <Route path="/phases" element={<Phases />} />
             <Route path="/info" element={<Info />} />
             <Route path="/config" element={<Config />} />
             <Route path="/logs" element={<Logs />} />

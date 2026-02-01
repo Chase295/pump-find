@@ -254,6 +254,36 @@ class ConfigUpdateResponse(BaseModel):
     updated_fields: List[str]
     new_config: Dict[str, Any]
 
+# === PHASE MODELS ===
+class PhaseUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    interval_seconds: Optional[int] = None
+    min_age_minutes: Optional[int] = None
+    max_age_minutes: Optional[int] = None
+
+class PhaseCreateRequest(BaseModel):
+    name: str
+    interval_seconds: int
+    min_age_minutes: int
+    max_age_minutes: int
+
+class PhaseUpdateResponse(BaseModel):
+    status: str
+    message: str
+    phase: Dict[str, Any]
+    updated_streams: int
+
+class PhaseCreateResponse(BaseModel):
+    status: str
+    message: str
+    phase: Dict[str, Any]
+
+class PhaseDeleteResponse(BaseModel):
+    status: str
+    message: str
+    deleted_phase_id: int
+    affected_streams: int
+
 # === ANALYTICS MODELS ===
 class WindowAnalytics(BaseModel):
     price_change_pct: Optional[float] = None
@@ -784,7 +814,7 @@ async def reload_config():
         load_config_from_file()
         # Phasen-Konfiguration auch neu laden
         if _unified_instance:
-            await _unified_instance.load_phases_config()
+            await _unified_instance.reload_phases_config()
         print("🔄 Konfiguration und Phasen neu geladen!", flush=True)
 
         response = ConfigReloadResponse(
@@ -1053,6 +1083,205 @@ async def get_phases():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get phases: {str(e)}")
+
+
+@app.put("/database/phases/{phase_id}")
+async def update_phase(phase_id: int, phase_data: PhaseUpdateRequest):
+    """Aktualisiert eine Phase und lädt Konfiguration für aktive Streams neu"""
+    try:
+        if not _unified_instance or not _unified_instance.pool:
+            raise HTTPException(status_code=503, detail="Database not connected")
+
+        # System-Phasen (99, 100) sind nicht editierbar
+        if phase_id >= 99:
+            raise HTTPException(status_code=400, detail="System-Phasen (99, 100) können nicht bearbeitet werden")
+
+        # Validierung
+        if phase_data.interval_seconds is not None and phase_data.interval_seconds < 1:
+            raise HTTPException(status_code=400, detail="interval_seconds muss mindestens 1 sein")
+
+        # Aktuelle Phase laden für Validierung
+        current = await _unified_instance.pool.fetchrow(
+            "SELECT * FROM ref_coin_phases WHERE id = $1", phase_id
+        )
+        if not current:
+            raise HTTPException(status_code=404, detail=f"Phase {phase_id} nicht gefunden")
+
+        # Werte für Update vorbereiten
+        new_name = phase_data.name if phase_data.name is not None else current["name"]
+        new_interval = phase_data.interval_seconds if phase_data.interval_seconds is not None else current["interval_seconds"]
+        new_min_age = phase_data.min_age_minutes if phase_data.min_age_minutes is not None else current["min_age_minutes"]
+        new_max_age = phase_data.max_age_minutes if phase_data.max_age_minutes is not None else current["max_age_minutes"]
+
+        # Validierung: max_age muss größer als min_age sein
+        if new_max_age <= new_min_age:
+            raise HTTPException(status_code=400, detail="max_age_minutes muss größer als min_age_minutes sein")
+
+        # Update in Datenbank
+        await _unified_instance.pool.execute("""
+            UPDATE ref_coin_phases
+            SET name = $1, interval_seconds = $2, min_age_minutes = $3, max_age_minutes = $4
+            WHERE id = $5
+        """, new_name, new_interval, new_min_age, new_max_age, phase_id)
+
+        # Phasen-Konfiguration im Service neu laden und aktive Streams aktualisieren
+        updated_streams = await _unified_instance.reload_phases_config()
+
+        # Aktualisierte Phase laden
+        updated = await _unified_instance.pool.fetchrow(
+            "SELECT * FROM ref_coin_phases WHERE id = $1", phase_id
+        )
+
+        print(f"✅ Phase {phase_id} aktualisiert: {new_name}, interval={new_interval}s, {updated_streams} Streams aktualisiert", flush=True)
+
+        return PhaseUpdateResponse(
+            status="success",
+            message=f"Phase {phase_id} erfolgreich aktualisiert",
+            phase=dict(updated),
+            updated_streams=updated_streams
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Phase Update Error: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update phase: {str(e)}")
+
+
+@app.post("/database/phases")
+async def create_phase(phase_data: PhaseCreateRequest):
+    """Erstellt eine neue Phase zwischen den bestehenden Phasen"""
+    try:
+        if not _unified_instance or not _unified_instance.pool:
+            raise HTTPException(status_code=503, detail="Database not connected")
+
+        # Validierung
+        if phase_data.interval_seconds < 1:
+            raise HTTPException(status_code=400, detail="interval_seconds muss mindestens 1 sein")
+
+        if phase_data.max_age_minutes <= phase_data.min_age_minutes:
+            raise HTTPException(status_code=400, detail="max_age_minutes muss größer als min_age_minutes sein")
+
+        if phase_data.min_age_minutes < 0:
+            raise HTTPException(status_code=400, detail="min_age_minutes darf nicht negativ sein")
+
+        # Nächste freie ID finden (zwischen 1 und 98)
+        existing_ids = await _unified_instance.pool.fetch(
+            "SELECT id FROM ref_coin_phases WHERE id < 99 ORDER BY id"
+        )
+        used_ids = {row['id'] for row in existing_ids}
+
+        # Finde die nächste freie ID
+        new_id = None
+        for i in range(1, 99):
+            if i not in used_ids:
+                new_id = i
+                break
+
+        if new_id is None:
+            raise HTTPException(status_code=400, detail="Maximale Anzahl an Phasen erreicht (98)")
+
+        # Phase einfügen
+        await _unified_instance.pool.execute("""
+            INSERT INTO ref_coin_phases (id, name, interval_seconds, min_age_minutes, max_age_minutes)
+            VALUES ($1, $2, $3, $4, $5)
+        """, new_id, phase_data.name, phase_data.interval_seconds, phase_data.min_age_minutes, phase_data.max_age_minutes)
+
+        # Phasen-Konfiguration im Service neu laden
+        await _unified_instance.reload_phases_config()
+
+        # Neue Phase laden
+        new_phase = await _unified_instance.pool.fetchrow(
+            "SELECT * FROM ref_coin_phases WHERE id = $1", new_id
+        )
+
+        print(f"✅ Neue Phase {new_id} erstellt: {phase_data.name}", flush=True)
+
+        return PhaseCreateResponse(
+            status="success",
+            message=f"Phase {new_id} '{phase_data.name}' erfolgreich erstellt",
+            phase=dict(new_phase)
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Phase Create Error: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Failed to create phase: {str(e)}")
+
+
+@app.delete("/database/phases/{phase_id}")
+async def delete_phase(phase_id: int):
+    """Löscht eine Phase und verschiebt betroffene Streams zur nächsten Phase"""
+    try:
+        if not _unified_instance or not _unified_instance.pool:
+            raise HTTPException(status_code=503, detail="Database not connected")
+
+        # System-Phasen (99, 100) können nicht gelöscht werden
+        if phase_id >= 99:
+            raise HTTPException(status_code=400, detail="System-Phasen (99, 100) können nicht gelöscht werden")
+
+        # Prüfen ob Phase existiert
+        phase = await _unified_instance.pool.fetchrow(
+            "SELECT * FROM ref_coin_phases WHERE id = $1", phase_id
+        )
+        if not phase:
+            raise HTTPException(status_code=404, detail=f"Phase {phase_id} nicht gefunden")
+
+        # Zähle wie viele reguläre Phasen noch existieren würden
+        remaining_count = await _unified_instance.pool.fetchval(
+            "SELECT COUNT(*) FROM ref_coin_phases WHERE id < 99 AND id != $1", phase_id
+        )
+        if remaining_count < 1:
+            raise HTTPException(status_code=400, detail="Mindestens eine reguläre Phase muss erhalten bleiben")
+
+        # Finde die nächste Phase für betroffene Streams
+        # Bevorzuge die nächsthöhere Phase, sonst nimm Phase 99 (Finished)
+        next_phase = await _unified_instance.pool.fetchrow("""
+            SELECT id FROM ref_coin_phases
+            WHERE id > $1 AND id < 99
+            ORDER BY id ASC
+            LIMIT 1
+        """, phase_id)
+
+        target_phase_id = next_phase['id'] if next_phase else 99
+
+        # Zähle betroffene aktive Streams
+        affected_count = await _unified_instance.pool.fetchval(
+            "SELECT COUNT(*) FROM coin_streams WHERE current_phase_id = $1 AND is_active = true",
+            phase_id
+        )
+
+        # Verschiebe betroffene Streams zur nächsten Phase
+        if affected_count > 0:
+            await _unified_instance.pool.execute("""
+                UPDATE coin_streams
+                SET current_phase_id = $1
+                WHERE current_phase_id = $2 AND is_active = true
+            """, target_phase_id, phase_id)
+
+        # Phase aus der Datenbank löschen
+        await _unified_instance.pool.execute(
+            "DELETE FROM ref_coin_phases WHERE id = $1", phase_id
+        )
+
+        # Phasen-Konfiguration im Service neu laden und aktive Streams aktualisieren
+        await _unified_instance.reload_phases_config()
+
+        print(f"✅ Phase {phase_id} '{phase['name']}' gelöscht, {affected_count} Streams zu Phase {target_phase_id} verschoben", flush=True)
+
+        return PhaseDeleteResponse(
+            status="success",
+            message=f"Phase {phase_id} '{phase['name']}' gelöscht. {affected_count} Streams zu Phase {target_phase_id} verschoben.",
+            deleted_phase_id=phase_id,
+            affected_streams=affected_count
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Phase Delete Error: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete phase: {str(e)}")
 
 
 @app.get("/database/streams")
@@ -1381,6 +1610,47 @@ class UnifiedService:
             db_connected.set(0)
             db_errors.labels(type="reconnect").inc()
             print(f"❌ DB-Reconnect fehlgeschlagen: {e}")
+            raise
+
+    async def reload_phases_config(self) -> int:
+        """Lädt Phasen-Konfiguration neu und aktualisiert aktive Streams in der Watchlist.
+
+        Returns:
+            Anzahl der aktualisierten Streams
+        """
+        try:
+            # 1. Neue Phasen-Werte aus DB laden
+            rows = await self.pool.fetch("SELECT * FROM ref_coin_phases ORDER BY id ASC")
+            self.phases_config = {}
+            for row in rows:
+                self.phases_config[row["id"]] = {
+                    "interval": row["interval_seconds"],
+                    "max_age": row["max_age_minutes"],
+                    "name": row["name"]
+                }
+            self.sorted_phase_ids = sorted(self.phases_config.keys())
+
+            # 2. Alle Einträge in der Watchlist mit neuen Intervallen aktualisieren
+            updated_count = 0
+            current_time = time.time()
+
+            for mint, entry in self.watchlist.items():
+                phase_id = entry["meta"].get("phase_id", 1)
+                if phase_id in self.phases_config:
+                    old_interval = entry.get("interval", 0)
+                    new_interval = self.phases_config[phase_id]["interval"]
+
+                    if old_interval != new_interval:
+                        entry["interval"] = new_interval
+                        # next_flush neu berechnen basierend auf aktuellem Zeitpunkt
+                        entry["next_flush"] = current_time + new_interval
+                        updated_count += 1
+
+            print(f"🔄 Phasen-Konfiguration neu geladen: {len(self.phases_config)} Phasen, {updated_count} Streams aktualisiert", flush=True)
+            return updated_count
+
+        except Exception as e:
+            print(f"❌ Fehler beim Neuladen der Phasen: {e}", flush=True)
             raise
 
     async def get_active_streams(self):

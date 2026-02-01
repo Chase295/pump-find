@@ -3,7 +3,13 @@ import type {
   HealthResponse,
   ConfigResponse,
   ConfigUpdateRequest,
-  ConfigUpdateResponse
+  ConfigUpdateResponse,
+  Phase,
+  PhaseUpdateRequest,
+  PhaseUpdateResponse,
+  PhaseCreateRequest,
+  PhaseCreateResponse,
+  PhaseDeleteResponse
 } from '../types/api';
 
 // API Base URL - immer HTTP für interne Kommunikation
@@ -70,8 +76,23 @@ export const pumpApi = {
     return response.data;
   },
 
-  async getPhases(): Promise<any> {
+  async getPhases(): Promise<Phase[]> {
     const response = await api.get('/api/database/phases');
+    return response.data.phases || [];
+  },
+
+  async updatePhase(phaseId: number, data: PhaseUpdateRequest): Promise<PhaseUpdateResponse> {
+    const response = await api.put(`/api/database/phases/${phaseId}`, data);
+    return response.data;
+  },
+
+  async createPhase(data: PhaseCreateRequest): Promise<PhaseCreateResponse> {
+    const response = await api.post('/api/database/phases', data);
+    return response.data;
+  },
+
+  async deletePhase(phaseId: number): Promise<PhaseDeleteResponse> {
+    const response = await api.delete(`/api/database/phases/${phaseId}`);
     return response.data;
   },
 

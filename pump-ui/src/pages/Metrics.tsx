@@ -119,7 +119,7 @@ const Metrics: React.FC = () => {
   const fetchPhases = async () => {
     try {
       const data = await pumpApi.getPhases();
-      setPhases(data.phases || []);
+      setPhases(data);
     } catch (err) {
       console.error('Failed to fetch phases:', err);
       setPhases([]);
