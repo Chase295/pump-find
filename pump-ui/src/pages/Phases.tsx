@@ -9,13 +9,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   IconButton,
   Tooltip,
   Chip,
@@ -25,6 +18,10 @@ import {
   DialogContent,
   DialogActions,
   DialogContentText,
+  useMediaQuery,
+  useTheme,
+  Grid,
+  Divider,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -34,6 +31,8 @@ import {
   Warning as WarningIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
+  Timer as TimerIcon,
+  Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { pumpApi } from '../services/api';
 import type { Phase, PhaseUpdateRequest, PhaseCreateRequest } from '../types/api';
@@ -51,6 +50,9 @@ interface NewPhaseForm {
 }
 
 const Phases: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [phases, setPhases] = useState<EditingPhase[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +113,6 @@ const Phases: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    // Validierung
     if (phase.interval_seconds < 1) {
       setError('Intervall muss mindestens 1 Sekunde sein');
       setIsLoading(false);
@@ -152,10 +153,9 @@ const Phases: React.FC = () => {
 
       const result = await pumpApi.updatePhase(phase.id, updateData);
 
-      setSuccessMessage(`Phase "${result.phase.name}" aktualisiert. ${result.updated_streams} aktive Streams wurden angepasst.`);
+      setSuccessMessage(`Phase "${result.phase.name}" aktualisiert. ${result.updated_streams} Streams angepasst.`);
       setTimeout(() => setSuccessMessage(''), 5000);
 
-      // Refresh phases
       await fetchPhases();
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 'Fehler beim Speichern der Phase';
@@ -166,9 +166,7 @@ const Phases: React.FC = () => {
     }
   };
 
-  // === ADD PHASE ===
   const handleOpenAddDialog = () => {
-    // Finde die letzte reguläre Phase für sinnvolle Default-Werte
     const regularPhases = phases.filter(p => p.id < 99);
     const lastPhase = regularPhases[regularPhases.length - 1];
 
@@ -185,7 +183,6 @@ const Phases: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    // Validierung
     if (!newPhase.name.trim()) {
       setError('Name darf nicht leer sein');
       setIsLoading(false);
@@ -214,7 +211,7 @@ const Phases: React.FC = () => {
 
       const result = await pumpApi.createPhase(createData);
 
-      setSuccessMessage(`Phase "${result.phase.name}" (ID: ${result.phase.id}) erfolgreich erstellt.`);
+      setSuccessMessage(`Phase "${result.phase.name}" (ID: ${result.phase.id}) erstellt.`);
       setTimeout(() => setSuccessMessage(''), 5000);
 
       setAddDialogOpen(false);
@@ -228,7 +225,6 @@ const Phases: React.FC = () => {
     }
   };
 
-  // === DELETE PHASE ===
   const handleOpenDeleteDialog = (phase: EditingPhase) => {
     setPhaseToDelete(phase);
     setDeleteDialogOpen(true);
@@ -272,19 +268,186 @@ const Phases: React.FC = () => {
   const regularPhaseCount = phases.filter(p => p.id < 99).length;
   const canDeletePhases = regularPhaseCount > 1;
 
+  // Mobile Card Component for each Phase
+  const PhaseCard = ({ phase }: { phase: EditingPhase }) => {
+    const isSystem = isSystemPhase(phase.id);
+
+    return (
+      <Card
+        sx={{
+          mb: 2,
+          opacity: isSystem ? 0.7 : 1,
+          border: phase.isEditing ? '2px solid' : '1px solid',
+          borderColor: phase.isEditing ? 'primary.main' : 'divider',
+        }}
+      >
+        <CardContent sx={{ p: { xs: 2, sm: 3 }, '&:last-child': { pb: { xs: 2, sm: 3 } } }}>
+          {/* Header with ID and Actions */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                label={`ID ${phase.id}`}
+                size="small"
+                color={getPhaseColor(phase.id)}
+              />
+              {isSystem && (
+                <Chip label="System" size="small" variant="outlined" />
+              )}
+            </Box>
+            {isSystem ? (
+              <Tooltip title="System-Phase (nicht editierbar)">
+                <WarningIcon fontSize="small" color="disabled" />
+              </Tooltip>
+            ) : phase.isEditing ? (
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <IconButton
+                  size="small"
+                  color="primary"
+                  onClick={() => handleSave(phase)}
+                  disabled={isLoading}
+                >
+                  <SaveIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleCancel(phase.id)}
+                  disabled={isLoading}
+                >
+                  <CancelIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <IconButton size="small" onClick={() => handleEdit(phase.id)}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleOpenDeleteDialog(phase)}
+                  disabled={!canDeletePhases || isLoading}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
+          </Box>
+
+          {/* Name */}
+          {phase.isEditing ? (
+            <TextField
+              size="small"
+              label="Name"
+              value={phase.name}
+              onChange={(e) => handleFieldChange(phase.id, 'name', e.target.value)}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+          ) : (
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'medium', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+              {phase.name}
+            </Typography>
+          )}
+
+          <Divider sx={{ mb: 2 }} />
+
+          {/* Stats Grid */}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 4 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <TimerIcon fontSize="small" color="action" sx={{ mb: 0.5 }} />
+                <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+                  Intervall
+                </Typography>
+                {phase.isEditing ? (
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={phase.interval_seconds}
+                    onChange={(e) => handleFieldChange(phase.id, 'interval_seconds', parseInt(e.target.value) || 1)}
+                    inputProps={{ min: 1, max: 300, style: { textAlign: 'center', padding: '4px' } }}
+                    sx={{ width: '100%', mt: 0.5, '& input': { fontSize: { xs: '0.8rem', sm: '1rem' } } }}
+                  />
+                ) : (
+                  <Typography variant="body1" fontWeight="bold" fontFamily="monospace" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                    {phase.interval_seconds}s
+                  </Typography>
+                )}
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <ScheduleIcon fontSize="small" color="action" sx={{ mb: 0.5 }} />
+                <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+                  Min Age
+                </Typography>
+                {phase.isEditing ? (
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={phase.min_age_minutes}
+                    onChange={(e) => handleFieldChange(phase.id, 'min_age_minutes', parseInt(e.target.value) || 0)}
+                    inputProps={{ min: 0, style: { textAlign: 'center', padding: '4px' } }}
+                    sx={{ width: '100%', mt: 0.5, '& input': { fontSize: { xs: '0.8rem', sm: '1rem' } } }}
+                  />
+                ) : (
+                  <Typography variant="body1" fontWeight="bold" fontFamily="monospace" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                    {phase.min_age_minutes}m
+                  </Typography>
+                )}
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <ScheduleIcon fontSize="small" color="action" sx={{ mb: 0.5 }} />
+                <Typography variant="caption" display="block" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+                  Max Age
+                </Typography>
+                {phase.isEditing ? (
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={phase.max_age_minutes}
+                    onChange={(e) => handleFieldChange(phase.id, 'max_age_minutes', parseInt(e.target.value) || 1)}
+                    inputProps={{ min: 1, style: { textAlign: 'center', padding: '4px' } }}
+                    sx={{ width: '100%', mt: 0.5, '& input': { fontSize: { xs: '0.8rem', sm: '1rem' } } }}
+                  />
+                ) : (
+                  <Typography variant="body1" fontWeight="bold" fontFamily="monospace" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                    {phase.max_age_minutes === 999999 ? '\u221e' : `${phase.max_age_minutes}m`}
+                  </Typography>
+                )}
+              </Box>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h4">
+    <Container maxWidth="lg" sx={{ mt: { xs: 2, sm: 4 }, mb: 4, px: { xs: 2, sm: 3 } }}>
+      {/* Header */}
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        alignItems: { xs: 'stretch', sm: 'center' },
+        mb: 3,
+        gap: 2
+      }}>
+        <Typography variant={isMobile ? 'h5' : 'h4'}>
           Tracking Phasen
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Button
             variant="contained"
             color="success"
             startIcon={<AddIcon />}
             onClick={handleOpenAddDialog}
             disabled={isLoading}
+            size={isMobile ? 'small' : 'medium'}
           >
             Neue Phase
           </Button>
@@ -293,6 +456,7 @@ const Phases: React.FC = () => {
             startIcon={<RefreshIcon />}
             onClick={fetchPhases}
             disabled={isLoading}
+            size={isMobile ? 'small' : 'medium'}
           >
             Aktualisieren
           </Button>
@@ -312,216 +476,79 @@ const Phases: React.FC = () => {
       )}
 
       <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>Hinweis:</strong> Änderungen an Phasen wirken sich sofort auf alle aktiven Streams aus.
-          System-Phasen (Finished, Graduated) können nicht bearbeitet oder gelöscht werden.
-          Beim Löschen einer Phase werden betroffene Streams zur nächsten Phase verschoben.
+        <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+          <strong>Hinweis:</strong> Änderungen wirken sich sofort auf aktive Streams aus.
+          System-Phasen (99, 100) sind geschützt.
         </Typography>
       </Alert>
+
+      {/* Phase Count Summary */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          {regularPhaseCount} reguläre Phasen + 2 System-Phasen
+        </Typography>
+      </Box>
 
       {isLoading && phases.length === 0 ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
           <CircularProgress />
         </Box>
       ) : (
-        <Card>
-          <CardHeader
-            title="Phasen-Konfiguration"
-            subheader={`${regularPhaseCount} reguläre Phasen + 2 System-Phasen`}
-          />
-          <CardContent>
-            <TableContainer component={Paper} variant="outlined">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell width="60">ID</TableCell>
-                    <TableCell width="180">Name</TableCell>
-                    <TableCell width="120" align="right">Intervall (s)</TableCell>
-                    <TableCell width="120" align="right">Min Age (min)</TableCell>
-                    <TableCell width="120" align="right">Max Age (min)</TableCell>
-                    <TableCell width="120" align="center">Aktionen</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {phases.map((phase) => (
-                    <TableRow
-                      key={phase.id}
-                      sx={{
-                        backgroundColor: phase.isEditing ? 'action.hover' : 'inherit',
-                        opacity: isSystemPhase(phase.id) ? 0.7 : 1,
-                      }}
-                    >
-                      <TableCell>
-                        <Chip
-                          label={phase.id}
-                          size="small"
-                          color={getPhaseColor(phase.id)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {phase.isEditing ? (
-                          <TextField
-                            size="small"
-                            value={phase.name}
-                            onChange={(e) => handleFieldChange(phase.id, 'name', e.target.value)}
-                            fullWidth
-                          />
-                        ) : (
-                          <Typography variant="body2" fontWeight="medium">
-                            {phase.name}
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="right">
-                        {phase.isEditing ? (
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={phase.interval_seconds}
-                            onChange={(e) => handleFieldChange(phase.id, 'interval_seconds', parseInt(e.target.value) || 1)}
-                            inputProps={{ min: 1, max: 300 }}
-                            sx={{ width: 80 }}
-                          />
-                        ) : (
-                          <Typography variant="body2" fontFamily="monospace">
-                            {phase.interval_seconds}s
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="right">
-                        {phase.isEditing ? (
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={phase.min_age_minutes}
-                            onChange={(e) => handleFieldChange(phase.id, 'min_age_minutes', parseInt(e.target.value) || 0)}
-                            inputProps={{ min: 0 }}
-                            sx={{ width: 80 }}
-                          />
-                        ) : (
-                          <Typography variant="body2" fontFamily="monospace">
-                            {phase.min_age_minutes} min
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="right">
-                        {phase.isEditing ? (
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={phase.max_age_minutes}
-                            onChange={(e) => handleFieldChange(phase.id, 'max_age_minutes', parseInt(e.target.value) || 1)}
-                            inputProps={{ min: 1 }}
-                            sx={{ width: 80 }}
-                          />
-                        ) : (
-                          <Typography variant="body2" fontFamily="monospace">
-                            {phase.max_age_minutes === 999999 ? '\u221E' : `${phase.max_age_minutes} min`}
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="center">
-                        {isSystemPhase(phase.id) ? (
-                          <Tooltip title="System-Phase (nicht editierbar)">
-                            <span>
-                              <IconButton disabled size="small">
-                                <WarningIcon fontSize="small" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        ) : phase.isEditing ? (
-                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
-                            <Tooltip title="Speichern">
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                onClick={() => handleSave(phase)}
-                                disabled={isLoading}
-                              >
-                                <SaveIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Abbrechen">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleCancel(phase.id)}
-                                disabled={isLoading}
-                              >
-                                <CancelIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        ) : (
-                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
-                            <Tooltip title="Bearbeiten">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEdit(phase.id)}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={canDeletePhases ? "Löschen" : "Mindestens eine Phase erforderlich"}>
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleOpenDeleteDialog(phase)}
-                                  disabled={!canDeletePhases || isLoading}
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          </Box>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
+        <Box>
+          {/* Regular Phases */}
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, mt: 2 }}>
+            Reguläre Phasen
+          </Typography>
+          {phases.filter(p => !isSystemPhase(p.id)).map((phase) => (
+            <PhaseCard key={phase.id} phase={phase} />
+          ))}
+
+          {/* System Phases */}
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, mt: 3 }}>
+            System-Phasen
+          </Typography>
+          {phases.filter(p => isSystemPhase(p.id)).map((phase) => (
+            <PhaseCard key={phase.id} phase={phase} />
+          ))}
+        </Box>
       )}
 
-      {/* Phasen-Erklärung */}
+      {/* Explanation Card */}
       <Card sx={{ mt: 3 }}>
         <CardHeader
           title="Phasen-Erklärung"
-          subheader="Was bedeuten die einzelnen Phasen?"
+          titleTypographyProps={{ variant: isMobile ? 'subtitle1' : 'h6' }}
         />
-        <CardContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Reguläre Phasen bestimmen das Tracking-Intervall basierend auf dem Coin-Alter.
-              Coins durchlaufen die Phasen automatisch, wenn sie die max_age_minutes einer Phase überschreiten.
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <CardContent sx={{ pt: 0 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+            Coins durchlaufen Phasen automatisch basierend auf ihrem Alter.
+            Jede Phase hat ein eigenes Tracking-Intervall.
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip label="99" color="error" size="small" />
-              <Box>
-                <Typography variant="body2" fontWeight="medium">Finished (System)</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Coins, deren Tracking beendet wurde (Bonding-Kurve voll oder Max-Age erreicht).
-                </Typography>
-              </Box>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                <strong>Finished:</strong> Tracking beendet
+              </Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip label="100" color="secondary" size="small" />
-              <Box>
-                <Typography variant="body2" fontWeight="medium">Graduated (System)</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Coins, die erfolgreich die Bonding-Kurve abgeschlossen haben.
-                </Typography>
-              </Box>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                <strong>Graduated:</strong> Bonding-Kurve abgeschlossen
+              </Typography>
             </Box>
           </Box>
         </CardContent>
       </Card>
 
       {/* Add Phase Dialog */}
-      <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={addDialogOpen}
+        onClose={() => setAddDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        fullScreen={isMobile}
+      >
         <DialogTitle>Neue Phase erstellen</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
@@ -561,27 +588,43 @@ const Phases: React.FC = () => {
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddDialogOpen(false)}>Abbrechen</Button>
-          <Button onClick={handleAddPhase} variant="contained" color="success" disabled={isLoading}>
+        <DialogActions sx={{ p: 2, flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+          <Button onClick={() => setAddDialogOpen(false)} fullWidth={isMobile}>
+            Abbrechen
+          </Button>
+          <Button
+            onClick={handleAddPhase}
+            variant="contained"
+            color="success"
+            disabled={isLoading}
+            fullWidth={isMobile}
+          >
             Erstellen
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Phase Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} fullScreen={isMobile}>
         <DialogTitle>Phase löschen?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Möchtest du die Phase <strong>"{phaseToDelete?.name}"</strong> (ID: {phaseToDelete?.id}) wirklich löschen?
+            Möchtest du <strong>"{phaseToDelete?.name}"</strong> (ID: {phaseToDelete?.id}) löschen?
             <br /><br />
-            Aktive Streams in dieser Phase werden automatisch zur nächsten Phase verschoben.
+            Aktive Streams werden zur nächsten Phase verschoben.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Abbrechen</Button>
-          <Button onClick={handleDeletePhase} variant="contained" color="error" disabled={isLoading}>
+        <DialogActions sx={{ p: 2, flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)} fullWidth={isMobile}>
+            Abbrechen
+          </Button>
+          <Button
+            onClick={handleDeletePhase}
+            variant="contained"
+            color="error"
+            disabled={isLoading}
+            fullWidth={isMobile}
+          >
             Löschen
           </Button>
         </DialogActions>
