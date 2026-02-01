@@ -27,9 +27,10 @@
 │   ├── integration/            # Integration tests
 │   └── stress/                 # Stress/load tests
 ├── pump-ui/                    # React TypeScript frontend
-│   ├── src/pages/              # Dashboard, Config, Metrics, Logs, Info
+│   ├── src/pages/              # Dashboard, Config, Metrics, Logs, Info, Phases
 │   ├── src/services/api.ts     # Axios HTTP client
 │   ├── src/stores/pumpStore.ts # Zustand state management
+│   ├── src/types/api.ts        # TypeScript interfaces
 │   ├── src/__tests__/          # Frontend tests (101 tests)
 │   │   ├── components/         # Component tests
 │   │   ├── stores/             # Store tests
@@ -103,11 +104,24 @@ npm test -- --watch                 # Watch mode
 
 ## Key Endpoints
 
+### Health & Metrics
 - `GET /health` - Service health with detailed stats
 - `GET /metrics` - Prometheus metrics
-- `GET /config` / `PUT /config` - Configuration management
+
+### Configuration
+- `GET /config` - Current service configuration
+- `PUT /config` - Update configuration
+
+### Database & Streams
 - `GET /database/streams` - Active coin tracking
+- `GET /database/streams/stats` - Stream statistics by phase
 - `GET /analytics/{mint}?windows=1m,5m,15m` - Coin performance
+
+### Phase Management (CRUD)
+- `GET /database/phases` - List all phases
+- `POST /database/phases` - Create new phase (ID 1-98)
+- `PUT /database/phases/{id}` - Update phase (triggers live-reload)
+- `DELETE /database/phases/{id}` - Delete phase (migrates streams)
 
 ## Architecture
 
@@ -139,9 +153,32 @@ HEALTH_PORT=8000
 
 ## Database Tables
 
-- `coin_streams` - Active tracking subscriptions (token_address, phase, is_active)
+- `coin_streams` - Active tracking subscriptions (token_address, current_phase_id, is_active)
 - `coin_metrics` - Historical trading metrics (OHLCV, volume, wallets)
-- `tracking_phases` - Phase definitions for tracking lifecycle
+- `ref_coin_phases` - Phase definitions for tracking lifecycle
+
+## Phase System
+
+Coins progress through tracking phases based on age. Each phase has:
+- **interval_seconds** - How often metrics are saved
+- **min_age_minutes** - Minimum coin age for this phase
+- **max_age_minutes** - Maximum coin age before advancing
+
+### Default Phases
+| ID | Name | Interval | Min Age | Max Age |
+|----|------|----------|---------|---------|
+| 1 | Baby Zone | 5s | 0 min | 10 min |
+| 2 | Survival Zone | 15s | 10 min | 120 min |
+| 3 | Mature Zone | 15s | 120 min | 240 min |
+| 99 | Finished | - | - | - |
+| 100 | Graduated | - | - | - |
+
+### Phase Management Features
+- **Add phases** via UI or `POST /database/phases`
+- **Edit phases** with live-reload of active streams
+- **Delete phases** with automatic stream migration
+- **System phases** (99, 100) are protected and cannot be modified
+- **Validation**: interval >= 1s, max_age > min_age, min 1 regular phase required
 
 ## Ports
 
@@ -160,11 +197,23 @@ HEALTH_PORT=8000
 - Type hints on all functions
 - MUI responsive breakpoints: `{ xs: ..., sm: ..., md: ... }`
 
+## UI Pages
+
+| Page | Route | Description |
+|------|-------|-------------|
+| Dashboard | `/` | Service health, live stats, connection status |
+| Metriken | `/metrics` | Prometheus metrics, phase distribution |
+| Phasen | `/phases` | Phase management (CRUD) |
+| Info | `/info` | System information |
+| Konfiguration | `/config` | Service configuration |
+| Logs | `/logs` | Service log viewer |
+
 ## Mobile Responsive Design
 
 All UI components are optimized for mobile:
 - Dashboard: Responsive icons, typography, gaps
 - Metrics: Responsive charts, grid layouts, padding
+- Phases: Responsive table, inline editing
 - Config: Adaptive form layouts
 - Logs: Button wrapping, container height adjustments
 
@@ -197,4 +246,23 @@ AND NOT EXISTS (SELECT 1 FROM coin_metrics cm WHERE cm.mint = token_address);
 ### Check Service Health
 ```bash
 curl -s http://localhost:3001/api/health | python3 -m json.tool
+```
+
+### Phase Management via CLI
+```bash
+# List phases
+curl -s http://localhost:3001/api/database/phases | jq '.phases'
+
+# Create new phase
+curl -X POST http://localhost:3001/api/database/phases \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Extended Zone", "interval_seconds": 30, "min_age_minutes": 240, "max_age_minutes": 480}'
+
+# Update phase (triggers live-reload)
+curl -X PUT http://localhost:3001/api/database/phases/1 \
+  -H "Content-Type: application/json" \
+  -d '{"interval_seconds": 10}'
+
+# Delete phase (streams migrate to next phase)
+curl -X DELETE http://localhost:3001/api/database/phases/4
 ```
