@@ -1,0 +1,15 @@
+# Test Dependencies für Pump Finder Backend
+# Installieren mit: pip install -r requirements.test.txt
+
+# Pytest Framework
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-timeout==2.2.0
+
+# Async Testing
+aioresponses==0.7.4
+
+# Mocking
+freezegun==1.2.2

@@ -15,6 +15,14 @@ from dateutil import parser
 from zoneinfo import ZoneInfo
 from collections import Counter
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+# Lade .env Datei (für lokale Entwicklung)
+from dotenv import load_dotenv
+env_file = Path(__file__).parent / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
+    print(f"✅ Lokale .env Datei geladen: {env_file}", flush=True)
 
 # FastAPI & Pydantic
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Response
@@ -38,7 +46,7 @@ from db_migration import check_and_create_schema
 # Kombiniert aus pump-discover und pump-metric
 
 # Datenbank (aus pump-metric)
-DB_DSN = os.getenv("DB_DSN", "postgresql://postgres:yc58TlS4Cz1j&HHoy%Oa@komodo.chase295.lo:5432/crypto_db")
+DB_DSN = os.getenv("DB_DSN", "")  # Muss in .env gesetzt werden
 DB_REFRESH_INTERVAL = int(os.getenv("DB_REFRESH_INTERVAL", "10"))
 DB_RETRY_DELAY = int(os.getenv("DB_RETRY_DELAY", "5"))
 

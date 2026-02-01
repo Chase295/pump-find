@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Service Status Overview */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 3 }, mb: 3 }}>
         <Card sx={{ flex: 1 }}>
           <CardContent>
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -112,14 +112,14 @@ const Dashboard: React.FC = () => {
                 <Typography color="textSecondary" gutterBottom>
                   Service Status
                 </Typography>
-                <Typography variant="h5">
+                <Typography variant="h5" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                   {isServiceHealthy ? 'Healthy' : 'Degraded'}
                 </Typography>
               </Box>
               {isServiceHealthy ? (
-                <CheckCircleIcon color="success" sx={{ fontSize: 40 }} />
+                <CheckCircleIcon color="success" sx={{ fontSize: { xs: 32, md: 40 } }} />
               ) : (
-                <ErrorIcon color="error" sx={{ fontSize: 40 }} />
+                <ErrorIcon color="error" sx={{ fontSize: { xs: 32, md: 40 } }} />
               )}
             </Box>
           </CardContent>
@@ -132,11 +132,11 @@ const Dashboard: React.FC = () => {
                 <Typography color="textSecondary" gutterBottom>
                   Uptime
                 </Typography>
-                <Typography variant="h5">
+                <Typography variant="h5" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                   {uptimeFormatted}
                 </Typography>
               </Box>
-              <TimelineIcon color="primary" sx={{ fontSize: 40 }} />
+              <TimelineIcon color="primary" sx={{ fontSize: { xs: 32, md: 40 } }} />
             </Box>
           </CardContent>
         </Card>
@@ -154,7 +154,7 @@ const Dashboard: React.FC = () => {
                   size="small"
                 />
               </Box>
-              <SwapHorizIcon color="primary" sx={{ fontSize: 40 }} />
+              <SwapHorizIcon color="primary" sx={{ fontSize: { xs: 32, md: 40 } }} />
             </Box>
           </CardContent>
         </Card>
@@ -172,16 +172,16 @@ const Dashboard: React.FC = () => {
                   size="small"
                 />
               </Box>
-              <StorageIcon color="primary" sx={{ fontSize: 40 }} />
+              <StorageIcon color="primary" sx={{ fontSize: { xs: 32, md: 40 } }} />
             </Box>
           </CardContent>
         </Card>
       </Box>
 
       {/* Cache & Discovery Stats */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 3 }}>
-        <Paper sx={{ p: 2, flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 3 }, mb: 3 }}>
+        <Paper sx={{ p: { xs: 1.5, md: 2 }, flex: 1 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
             💾 Cache Statistiken
           </Typography>
           {health ? (
@@ -206,8 +206,8 @@ const Dashboard: React.FC = () => {
           )}
         </Paper>
 
-        <Paper sx={{ p: 2, flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
+        <Paper sx={{ p: { xs: 1.5, md: 2 }, flex: 1 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
             🔍 Discovery Statistiken
           </Typography>
           {health?.discovery_stats && (
@@ -234,9 +234,9 @@ const Dashboard: React.FC = () => {
       </Box>
 
       {/* Tracking Stats */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 3 }}>
-        <Paper sx={{ p: 2, flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 3 }, mb: 3 }}>
+        <Paper sx={{ p: { xs: 1.5, md: 2 }, flex: 1 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
             📊 Tracking Statistiken
           </Typography>
           {health?.tracking_stats && (
@@ -254,8 +254,8 @@ const Dashboard: React.FC = () => {
           )}
         </Paper>
 
-        <Paper sx={{ p: 2, flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
+        <Paper sx={{ p: { xs: 1.5, md: 2 }, flex: 1 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
             ⚙️ Service Konfiguration
           </Typography>
           {config && (

@@ -226,102 +226,102 @@ const Metrics: React.FC = () => {
       {loading && <LinearProgress sx={{ mb: 3 }} />}
 
       {/* Key Metrics Overview */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 4 }}>
-        <Box sx={{ flex: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, flexWrap: 'wrap', gap: { xs: 2, md: 3 }, mb: 4 }}>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' }, minWidth: { sm: 200 } }}>
           <Card sx={{
             bgcolor: 'rgba(0, 212, 255, 0.1)',
             border: '1px solid rgba(0, 212, 255, 0.3)',
             backdropFilter: 'blur(10px)'
           }}>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                     Coins Empfangen
                   </Typography>
-                  <Typography variant="h4" sx={{ color: '#00d4ff' }}>
+                  <Typography variant="h4" sx={{ color: '#00d4ff', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                     {parsedMetrics?.coins_received_total.toLocaleString() || '0'}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, fontSize: { xs: '0.7rem', md: '0.75rem' }, display: { xs: 'none', md: 'block' } }}>
                     Neue Coins von PumpPortal entdeckt
                   </Typography>
                 </Box>
-                <TimelineIcon sx={{ fontSize: 40, color: '#00d4ff' }} />
+                <TimelineIcon sx={{ fontSize: { xs: 32, md: 40 }, color: '#00d4ff' }} />
               </Box>
             </CardContent>
           </Card>
         </Box>
 
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' }, minWidth: { sm: 200 } }}>
           <Card sx={{
             bgcolor: 'rgba(76, 175, 80, 0.1)',
             border: '1px solid rgba(76, 175, 80, 0.3)',
             backdropFilter: 'blur(10px)'
           }}>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                     Cache Größe
                   </Typography>
-                  <Typography variant="h4" sx={{ color: '#4caf50' }}>
+                  <Typography variant="h4" sx={{ color: '#4caf50', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                     {parsedMetrics?.cache_size_current || '0'}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, fontSize: { xs: '0.7rem', md: '0.75rem' }, display: { xs: 'none', md: 'block' } }}>
                     Aktive Coins im 120s Cache
                   </Typography>
                 </Box>
-                <MemoryIcon sx={{ fontSize: 40, color: '#4caf50' }} />
+                <MemoryIcon sx={{ fontSize: { xs: 32, md: 40 }, color: '#4caf50' }} />
               </Box>
             </CardContent>
           </Card>
         </Box>
 
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' }, minWidth: { sm: 200 } }}>
           <Card sx={{
             bgcolor: 'rgba(255, 152, 0, 0.1)',
             border: '1px solid rgba(255, 152, 0, 0.3)',
             backdropFilter: 'blur(10px)'
           }}>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                     Trades Gesamt
                   </Typography>
-                  <Typography variant="h4" sx={{ color: '#ff9800' }}>
+                  <Typography variant="h4" sx={{ color: '#ff9800', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                     {parsedMetrics?.trades_received_total.toLocaleString() || '0'}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, fontSize: { xs: '0.7rem', md: '0.75rem' }, display: { xs: 'none', md: 'block' } }}>
                     Trade-Events von PumpPortal empfangen
                   </Typography>
                 </Box>
-                <SpeedIcon sx={{ fontSize: 40, color: '#ff9800' }} />
+                <SpeedIcon sx={{ fontSize: { xs: 32, md: 40 }, color: '#ff9800' }} />
               </Box>
             </CardContent>
           </Card>
         </Box>
 
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' }, minWidth: { sm: 200 } }}>
           <Card sx={{
             bgcolor: 'rgba(244, 67, 54, 0.1)',
             border: '1px solid rgba(244, 67, 54, 0.3)',
             backdropFilter: 'blur(10px)'
           }}>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                     Fehler Gesamt
                   </Typography>
-                  <Typography variant="h4" sx={{ color: '#f44336' }}>
+                  <Typography variant="h4" sx={{ color: '#f44336', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                     {parsedMetrics?.errors_total || '0'}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, fontSize: { xs: '0.7rem', md: '0.75rem' }, display: { xs: 'none', md: 'block' } }}>
                     Verbindungs- und API-Fehler
                   </Typography>
                 </Box>
-                <ErrorIcon sx={{ fontSize: 40, color: '#f44336' }} />
+                <ErrorIcon sx={{ fontSize: { xs: 32, md: 40 }, color: '#f44336' }} />
               </Box>
             </CardContent>
           </Card>
@@ -333,77 +333,77 @@ const Metrics: React.FC = () => {
         <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
           🗄️ Datenbank Statistiken
         </Typography>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-          <Box sx={{ flex: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, flexWrap: 'wrap', gap: { xs: 2, md: 3 } }}>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' } }}>
             <Card sx={{
               bgcolor: 'rgba(156, 39, 176, 0.1)',
               border: '1px solid rgba(156, 39, 176, 0.3)',
               backdropFilter: 'blur(10px)'
             }}>
-              <CardContent>
+              <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                   <Box>
-                    <Typography color="textSecondary" gutterBottom>
+                    <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                       Aktive Streams
                     </Typography>
-                    <Typography variant="h4" sx={{ color: '#9c27b0' }}>
+                    <Typography variant="h4" sx={{ color: '#9c27b0', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                       {streamStats?.active_streams || '0'}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                    <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, display: { xs: 'none', md: 'block' } }}>
                       Live getrackte Coins
                     </Typography>
                   </Box>
-                  <Typography sx={{ fontSize: 40, color: '#9c27b0' }}>📊</Typography>
+                  <Typography sx={{ fontSize: { xs: 32, md: 40 }, color: '#9c27b0' }}>📊</Typography>
                 </Box>
               </CardContent>
             </Card>
           </Box>
 
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' } }}>
             <Card sx={{
               bgcolor: 'rgba(33, 150, 243, 0.1)',
               border: '1px solid rgba(33, 150, 243, 0.3)',
               backdropFilter: 'blur(10px)'
             }}>
-              <CardContent>
+              <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                   <Box>
-                    <Typography color="textSecondary" gutterBottom>
+                    <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                       Gesamt Streams
                     </Typography>
-                    <Typography variant="h4" sx={{ color: '#2196f3' }}>
+                    <Typography variant="h4" sx={{ color: '#2196f3', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                       {streamStats?.total_streams || '0'}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                    <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, display: { xs: 'none', md: 'block' } }}>
                       Alle jemals getrackten Coins
                     </Typography>
                   </Box>
-                  <Typography sx={{ fontSize: 40, color: '#2196f3' }}>📈</Typography>
+                  <Typography sx={{ fontSize: { xs: 32, md: 40 }, color: '#2196f3' }}>📈</Typography>
                 </Box>
               </CardContent>
             </Card>
           </Box>
 
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' } }}>
             <Card sx={{
               bgcolor: 'rgba(76, 175, 80, 0.1)',
               border: '1px solid rgba(76, 175, 80, 0.3)',
               backdropFilter: 'blur(10px)'
             }}>
-              <CardContent>
+              <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                   <Box>
-                    <Typography color="textSecondary" gutterBottom>
+                    <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                       Phasen
                     </Typography>
-                    <Typography variant="h4" sx={{ color: '#4caf50' }}>
+                    <Typography variant="h4" sx={{ color: '#4caf50', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                       {phases.length}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+                    <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, display: { xs: 'none', md: 'block' } }}>
                       Tracking-Phasen definiert
                     </Typography>
                   </Box>
-                  <Typography sx={{ fontSize: 40, color: '#4caf50' }}>🏷️</Typography>
+                  <Typography sx={{ fontSize: { xs: 32, md: 40 }, color: '#4caf50' }}>🏷️</Typography>
                 </Box>
               </CardContent>
             </Card>
@@ -416,7 +416,7 @@ const Metrics: React.FC = () => {
             <Typography variant="h6" gutterBottom sx={{ mt: 2, mb: 2 }}>
               📊 Phasen-Verteilung
             </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }, gap: { xs: 1, md: 2 } }}>
               {phases.map((phase: any) => {
                 const count = streamStats.streams_by_phase[phase.id] || 0;
                 const percentage = streamStats.total_streams > 0 ? (count / streamStats.total_streams * 100).toFixed(1) : '0';
@@ -448,80 +448,80 @@ const Metrics: React.FC = () => {
 
       {/* Filter Statistics */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2, fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
           🛡️ Coin Filter Statistiken
         </Typography>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-          <Box sx={{ flex: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, flexWrap: 'wrap', gap: { xs: 2, md: 3 } }}>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' } }}>
             <Card sx={{
               bgcolor: 'rgba(255, 193, 7, 0.1)',
               border: '1px solid rgba(255, 193, 7, 0.3)',
               backdropFilter: 'blur(10px)'
             }}>
-              <CardContent>
+              <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                   <Box>
-                    <Typography color="textSecondary" gutterBottom>
+                    <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                       Bad Name Filter
                     </Typography>
-                    <Typography variant="h5">
+                    <Typography variant="h5" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                       {parsedMetrics?.coins_filtered_bad_name.toLocaleString() || '0'}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
+                    <Typography variant="body2" color="textSecondary" sx={{ display: { xs: 'none', md: 'block' } }}>
                       Coins mit schlechten Namen gefiltert
                     </Typography>
                   </Box>
-                  <ErrorIcon sx={{ fontSize: 40, color: '#ff9800' }} />
+                  <ErrorIcon sx={{ fontSize: { xs: 32, md: 40 }, color: '#ff9800' }} />
                 </Box>
               </CardContent>
             </Card>
           </Box>
 
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' } }}>
             <Card sx={{
               bgcolor: 'rgba(244, 67, 54, 0.1)',
               border: '1px solid rgba(244, 67, 54, 0.3)',
               backdropFilter: 'blur(10px)'
             }}>
-              <CardContent>
+              <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                   <Box>
-                    <Typography color="textSecondary" gutterBottom>
+                    <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                       Spam-Burst Filter
                     </Typography>
-                    <Typography variant="h5">
+                    <Typography variant="h5" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                       {parsedMetrics?.coins_filtered_spam_burst.toLocaleString() || '0'}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
+                    <Typography variant="body2" color="textSecondary" sx={{ display: { xs: 'none', md: 'block' } }}>
                       Coins wegen Spam-Burst gefiltert
                     </Typography>
                   </Box>
-                  <ErrorIcon sx={{ fontSize: 40, color: '#f44336' }} />
+                  <ErrorIcon sx={{ fontSize: { xs: 32, md: 40 }, color: '#f44336' }} />
                 </Box>
               </CardContent>
             </Card>
           </Box>
 
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 0' } }}>
             <Card sx={{
               bgcolor: 'rgba(156, 39, 176, 0.1)',
               border: '1px solid rgba(156, 39, 176, 0.3)',
               backdropFilter: 'blur(10px)'
             }}>
-              <CardContent>
+              <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                   <Box>
-                    <Typography color="textSecondary" gutterBottom>
+                    <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                       Gesamt Gefiltert
                     </Typography>
-                    <Typography variant="h5">
+                    <Typography variant="h5" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                       {parsedMetrics?.coins_filtered_total.toLocaleString() || '0'}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
+                    <Typography variant="body2" color="textSecondary" sx={{ display: { xs: 'none', md: 'block' } }}>
                       Insgesamt gefilterte Coins
                     </Typography>
                   </Box>
-                  <MemoryIcon sx={{ fontSize: 40, color: '#9c27b0' }} />
+                  <MemoryIcon sx={{ fontSize: { xs: 32, md: 40 }, color: '#9c27b0' }} />
                 </Box>
               </CardContent>
             </Card>
@@ -530,18 +530,19 @@ const Metrics: React.FC = () => {
       </Box>
 
       {/* Charts */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, mb: 4 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 2, md: 3 }, mb: 4 }}>
         <Box sx={{ flex: 2 }}>
           <Paper sx={{
-            p: 3,
+            p: { xs: 2, md: 3 },
             bgcolor: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(10px)'
           }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
               📈 Performance über Zeit
             </Typography>
-            <ResponsiveContainer width="100%" height={300}>
+            <Box sx={{ height: { xs: 250, md: 300 } }}>
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis dataKey="time" stroke="#b8c5d6" />
@@ -576,20 +577,22 @@ const Metrics: React.FC = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
+            </Box>
           </Paper>
         </Box>
 
         <Box sx={{ flex: 1 }}>
           <Paper sx={{
-            p: 3,
+            p: { xs: 2, md: 3 },
             bgcolor: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(10px)'
           }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
               🥧 Metriken-Verteilung
             </Typography>
-            <ResponsiveContainer width="100%" height={300}>
+            <Box sx={{ height: { xs: 250, md: 300 } }}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={statusData}
@@ -607,20 +610,21 @@ const Metrics: React.FC = () => {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            </Box>
           </Paper>
         </Box>
       </Box>
 
       {/* System Status */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 4 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 3 }, mb: 4 }}>
         <Box sx={{ flex: 1 }}>
           <Paper sx={{
-            p: 3,
+            p: { xs: 2, md: 3 },
             bgcolor: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(10px)'
           }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
               🔗 Service Status
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -663,12 +667,12 @@ const Metrics: React.FC = () => {
 
         <Box sx={{ flex: 1 }}>
           <Paper sx={{
-            p: 3,
+            p: { xs: 2, md: 3 },
             bgcolor: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(10px)'
           }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}>
               ⏱️ Performance
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

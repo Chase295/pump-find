@@ -122,7 +122,7 @@ const Config: React.FC = () => {
       <form onSubmit={handleSubmit}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* n8n Konfiguration */}
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 3 } }}>
             <Box sx={{ flex: 1 }}>
               <Card>
                 <CardHeader
@@ -180,7 +180,7 @@ const Config: React.FC = () => {
           </Box>
 
           {/* Performance Einstellungen */}
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, flexWrap: 'wrap', gap: { xs: 2, md: 3 } }}>
             <Box sx={{ flex: 1 }}>
               <Card>
                 <CardHeader
@@ -253,7 +253,7 @@ const Config: React.FC = () => {
           </Box>
 
           {/* Filter Einstellungen */}
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 3 } }}>
             <Box sx={{ flex: 1 }}>
               <Card>
                 <CardHeader

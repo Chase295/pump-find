@@ -83,17 +83,18 @@ const Logs: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h4">
+      <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={2} sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
           📋 Service Logs
         </Typography>
 
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={1} flexWrap="wrap" justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}>
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
             onClick={handleDownloadLogs}
             disabled={logs.length === 0}
+            size="small"
           >
             Download
           </Button>
@@ -103,8 +104,9 @@ const Logs: React.FC = () => {
             startIcon={<RefreshIcon />}
             onClick={() => setAutoRefresh(!autoRefresh)}
             color={autoRefresh ? "primary" : "inherit"}
+            size="small"
           >
-            Auto Refresh {autoRefresh ? 'ON' : 'OFF'}
+            Auto {autoRefresh ? 'ON' : 'OFF'}
           </Button>
 
           <Button
@@ -112,6 +114,7 @@ const Logs: React.FC = () => {
             startIcon={<RefreshIcon />}
             onClick={fetchLogs}
             disabled={isLoading}
+            size="small"
           >
             {isLoading ? 'Loading...' : 'Refresh'}
           </Button>
@@ -139,7 +142,7 @@ const Logs: React.FC = () => {
         </Alert>
       )}
 
-      <Paper sx={{ p: 2, height: '70vh', overflow: 'auto' }}>
+      <Paper sx={{ p: { xs: 1.5, md: 2 }, height: { xs: '60vh', md: '70vh' }, overflow: 'auto' }}>
         <Typography variant="h6" gutterBottom>
           Service Activity Log
         </Typography>
@@ -151,16 +154,21 @@ const Logs: React.FC = () => {
             No logs available. Click "Refresh" to load service status.
           </Typography>
         ) : (
-          <Box sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+          <Box sx={{ fontFamily: 'monospace', fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
             {logs.map((log, index) => (
-              <Box key={index} sx={{ mb: 0.5, display: 'flex', alignItems: 'center' }}>
+              <Box key={index} sx={{ mb: 0.5, display: 'flex', alignItems: 'flex-start', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 0.5, sm: 0 } }}>
                 <Chip
                   label={log.split(']')[0].substring(1)}
                   size="small"
                   color={getLogLevelColor(log)}
-                  sx={{ mr: 1, fontSize: '0.75rem' }}
+                  sx={{
+                    mr: { sm: 1 },
+                    fontSize: { xs: '0.7rem', md: '0.75rem' },
+                    minHeight: { xs: 24, md: 24 },
+                    height: 'auto'
+                  }}
                 />
-                <Typography variant="body2" sx={{ flex: 1 }}>
+                <Typography variant="body2" sx={{ flex: 1, fontSize: { xs: '0.75rem', md: '0.875rem' }, wordBreak: 'break-word' }}>
                   {log.split(']')[1]?.substring(1) || log}
                 </Typography>
               </Box>

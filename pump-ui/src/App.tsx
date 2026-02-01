@@ -212,7 +212,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </AppBar>
 
         {/* Page Content */}
-        <Box sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 1, sm: 2, md: 0 } }}>
           {children}
         </Box>
       </Box>
