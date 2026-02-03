@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Python-Abhängigkeiten
-COPY requirements.unified.txt .
-RUN pip install --no-cache-dir -r requirements.unified.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Anwendung kopieren
 COPY unified_service.py .

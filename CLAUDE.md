@@ -14,32 +14,50 @@
 ## Directory Structure
 
 ```
-├── unified_service.py          # Main FastAPI service (discovery + metrics)
-├── db_migration.py             # Database schema initialization
-├── requirements.unified.txt    # Python dependencies
-├── requirements.test.txt       # Test dependencies (pytest)
-├── pytest.ini                  # pytest configuration
-├── docker-compose.yaml         # Full stack orchestration
+pump-find/
 ├── .env                        # Environment variables (gitignored)
 ├── .env.example                # Template for environment setup
-├── tests/                      # Backend tests (201 tests)
-│   ├── unit/                   # Unit tests
-│   ├── integration/            # Integration tests
-│   └── stress/                 # Stress/load tests
-├── pump-ui/                    # React TypeScript frontend
-│   ├── src/pages/              # Dashboard, Config, Metrics, Logs, Info, Phases
-│   ├── src/services/api.ts     # Axios HTTP client
-│   ├── src/stores/pumpStore.ts # Zustand state management
-│   ├── src/types/api.ts        # TypeScript interfaces
-│   ├── src/__tests__/          # Frontend tests (101 tests)
-│   │   ├── components/         # Component tests
-│   │   ├── stores/             # Store tests
-│   │   ├── services/           # API tests
-│   │   └── mocks/              # MSW mock handlers
+├── docker-compose.yaml         # Full stack orchestration
+├── CLAUDE.md                   # Project documentation
+├── README.md                   # Project readme
+│
+├── backend/                    # Python Backend (pump-find-backend)
+│   ├── unified_service.py      # Main FastAPI service (2561 lines)
+│   ├── db_migration.py         # Database schema initialization
+│   ├── Dockerfile              # Backend Docker image
+│   ├── requirements.txt        # Python dependencies
+│   ├── requirements.test.txt   # Test dependencies (pytest)
+│   ├── pytest.ini              # pytest configuration
+│   └── tests/                  # Backend tests (201 tests)
+│       ├── unit/               # Unit tests
+│       ├── integration/        # Integration tests
+│       └── stress/             # Stress/load tests
+│
+├── frontend/                   # React Frontend (pump-find-frontend)
+│   ├── src/
+│   │   ├── pages/              # Dashboard, Config, Metrics, Logs, Info, Phases
+│   │   ├── services/api.ts     # Axios HTTP client
+│   │   ├── stores/pumpStore.ts # Zustand state management
+│   │   ├── types/api.ts        # TypeScript interfaces
+│   │   └── __tests__/          # Frontend tests (101 tests)
+│   ├── Dockerfile              # Frontend Docker image (Nginx)
+│   ├── nginx.conf              # Reverse proxy configuration
+│   ├── package.json            # Node dependencies
 │   └── vitest.config.ts        # Vitest configuration
+│
+├── docs/                       # Developer documentation
+│   ├── architecture/           # System architecture
+│   ├── api/                    # API reference
+│   ├── algorithms/             # Algorithm documentation
+│   ├── database/               # Database schema & queries
+│   ├── testing/                # Test documentation
+│   └── deployment/             # Deployment guides
+│
 ├── sql/                        # Database schemas
-├── scripts/                    # Testing utilities
-└── docs/                       # Additional documentation
+│   ├── complete_schema.sql     # Full schema
+│   └── ref_coin_phase.sql      # Phase definitions
+│
+└── trash/                      # Archived files (can be deleted)
 ```
 
 ## Quick Commands
@@ -52,23 +70,32 @@ docker compose up -d
 curl http://localhost:3001/api/health
 
 # View logs
-docker compose logs -f pump-service
+docker compose logs -f pump-find-backend
 
 # Frontend development
-cd pump-ui && npm install && npm run dev
+cd frontend && npm install && npm run dev
 
 # Run backend tests (201 tests)
-pip install -r requirements.test.txt
-pytest tests/ -v
+cd backend && pip install -r requirements.test.txt && pytest tests/ -v
 
 # Run frontend tests (101 tests)
-cd pump-ui && npm test
+cd frontend && npm test
 ```
+
+## Docker Services
+
+| Service | Container Name | Port | Description |
+|---------|----------------|------|-------------|
+| pump-find-frontend | pump-find-frontend | 3001:80 | Nginx + React UI |
+| pump-find-backend | pump-find-backend | 8000 (internal) | FastAPI Backend |
+
+**Note:** Only port 3001 is exposed externally. Backend is accessed via `/api/*` proxy.
 
 ## Test Suite
 
 ### Backend (pytest) - 201 Tests
 ```bash
+cd backend
 pytest tests/ -v                    # All tests
 pytest tests/unit/ -v               # Unit tests only
 pytest tests/integration/ -v        # Integration tests
@@ -90,7 +117,7 @@ pytest tests/stress/ -v             # Stress tests
 
 ### Frontend (vitest) - 101 Tests
 ```bash
-cd pump-ui
+cd frontend
 npm test                            # Run all tests
 npm test -- --watch                 # Watch mode
 ```
@@ -180,15 +207,6 @@ Coins progress through tracking phases based on age. Each phase has:
 - **System phases** (99, 100) are protected and cannot be modified
 - **Validation**: interval >= 1s, max_age > min_age, min 1 regular phase required
 
-## Ports
-
-| Service | Port | Description |
-|---------|------|-------------|
-| pump-ui (Nginx) | 3001 | UI + API Proxy |
-| pump-service | 8000 | FastAPI (internal) |
-
-**Note:** Only port 3001 is exposed externally. The backend is accessed via `/api/*` proxy.
-
 ## Code Conventions
 
 - German variable names and comments
@@ -229,14 +247,14 @@ docker compose up -d
 
 # Check status
 docker compose ps
-docker compose logs -f
+docker compose logs -f pump-find-backend
 ```
 
 ## Troubleshooting
 
 ### Database Zombie Cleanup
-```python
-# In container or locally with DB access
+```sql
+-- In container or locally with DB access
 UPDATE coin_streams SET is_active = false
 WHERE is_active = true
 AND started_at < NOW() - INTERVAL '2 hours'
@@ -266,3 +284,62 @@ curl -X PUT http://localhost:3001/api/database/phases/1 \
 # Delete phase (streams migrate to next phase)
 curl -X DELETE http://localhost:3001/api/database/phases/4
 ```
+
+---
+
+## Developer Documentation
+
+Vollständige Entwickler-Dokumentation unter `docs/`:
+
+### Architektur
+- **[docs/architecture/overview.md](docs/architecture/overview.md)** - System-Diagramme, Tech-Stack, Single-Port-Architektur
+- **[docs/architecture/backend.md](docs/architecture/backend.md)** - UnifiedService Klasse (2561 Zeilen) im Detail
+- **[docs/architecture/frontend.md](docs/architecture/frontend.md)** - React-Architektur, 6 Seiten, Zustand Store
+- **[docs/architecture/data-flow.md](docs/architecture/data-flow.md)** - WebSocket → Cache → DB → n8n Datenfluss
+
+### API-Referenz
+- **[docs/api/endpoints.md](docs/api/endpoints.md)** - Alle 15+ REST-Endpunkte mit Request/Response Schemas
+- **[docs/api/websocket.md](docs/api/websocket.md)** - pumpportal.fun WebSocket-Protokoll
+
+### Algorithmen
+- **[docs/algorithms/coin-discovery.md](docs/algorithms/coin-discovery.md)** - CoinFilter, 120s Cache, n8n Batching
+- **[docs/algorithms/trade-processing.md](docs/algorithms/trade-processing.md)** - OHLCV, Whale Detection, ATH-Tracking
+- **[docs/algorithms/phase-management.md](docs/algorithms/phase-management.md)** - Lifecycle, CRUD, Live-Reload
+- **[docs/algorithms/zombie-detection.md](docs/algorithms/zombie-detection.md)** - Stale Streams, Force-Resubscribe
+
+### Datenbank
+- **[docs/database/schema.md](docs/database/schema.md)** - 4 Tabellen, 20+ Indices, ER-Diagramm
+- **[docs/database/queries.md](docs/database/queries.md)** - Wichtige SQL-Queries mit Erklärungen
+
+### Testing
+- **[docs/testing/backend.md](docs/testing/backend.md)** - 201 pytest Tests, Fixtures, Mock-Strategien
+- **[docs/testing/frontend.md](docs/testing/frontend.md)** - 101 vitest + MSW Tests
+
+### Deployment
+- **[docs/deployment/docker.md](docs/deployment/docker.md)** - Docker-Konfiguration, Commands, Troubleshooting
+- **[docs/deployment/monitoring.md](docs/deployment/monitoring.md)** - 50+ Prometheus Metriken, Grafana
+
+### Referenz
+- **[docs/glossary.md](docs/glossary.md)** - Begriffslexikon (OHLCV, ATH, Bonding Curve, etc.)
+
+---
+
+## Documentation Maintenance
+
+**WICHTIG:** Bei Code-Änderungen MUSS die entsprechende Dokumentation aktualisiert werden!
+
+| Änderung an... | Dokumentation aktualisieren |
+|----------------|----------------------------|
+| `backend/unified_service.py` | `docs/architecture/backend.md`, `docs/algorithms/*` |
+| API-Endpunkte | `docs/api/endpoints.md` |
+| Datenbank-Schema | `docs/database/schema.md`, `docs/database/queries.md` |
+| Frontend-Komponenten | `docs/architecture/frontend.md` |
+| Docker-Konfiguration | `docs/deployment/docker.md` |
+| Prometheus-Metriken | `docs/deployment/monitoring.md` |
+| Tests | `docs/testing/backend.md` oder `docs/testing/frontend.md` |
+
+**Dokumentations-Checkliste bei PRs:**
+1. Code-Referenzen (Zeilennummern) noch korrekt?
+2. Neue Features/Endpunkte dokumentiert?
+3. Geänderte Algorithmen aktualisiert?
+4. Glossar erweitert falls neue Begriffe?

@@ -52,7 +52,11 @@ npm-debug.log*
 .dockerignore
 
 # Build artifacts
-pump-ui/dist/
+frontend/dist/
 
-# Trash (bereits archiviert)
+# Trash (archivierte Dateien)
 trash/
+
+# Test cache
+.pytest_cache/
+backend/.pytest_cache/

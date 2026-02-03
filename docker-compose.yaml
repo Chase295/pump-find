@@ -1,16 +1,18 @@
+name: pump-find
+
 services:
-  pump-ui:
+  # Frontend (Nginx + React)
+  pump-find-frontend:
     build:
-      context: ./pump-ui
+      context: ./frontend
       dockerfile: Dockerfile
-      # Keine VITE_API_BASE_URL für Produktion - dynamische Ermittlung
-    container_name: pump-ui
+    image: pump-find-frontend
+    container_name: pump-find-frontend
     restart: unless-stopped
-    # Keine Environment-Variablen - API-URL wird dynamisch ermittelt
     ports:
-      - "3001:80"  # EINZIGER externer Port - UI + API über Reverse Proxy
+      - "3001:80"
     depends_on:
-      - pump-service
+      - pump-find-backend
     networks:
       - pump-network
     healthcheck:
@@ -20,20 +22,18 @@ services:
       retries: 3
       start_period: 10s
 
-  # Vereinter Pump-Service (nur intern verfügbar)
-  pump-service:
+  # Backend (FastAPI + WebSocket)
+  pump-find-backend:
     build:
-      context: .
-      dockerfile: Dockerfile.unified
-    container_name: pump-service
+      context: ./backend
+      dockerfile: Dockerfile
+    image: pump-find-backend
+    container_name: pump-find-backend
     restart: unless-stopped
-    # KEINE exposed ports - nur über Reverse Proxy zugänglich
     expose:
-      - "8000"  # Intern für pump-ui verfügbar
+      - "8000"
     env_file:
-      - .env  # Alle Umgebungsvariablen aus .env laden
-    volumes:
-      - ./config:/app/config:rw
+      - .env
     networks:
       - pump-network
     healthcheck:
@@ -46,7 +46,3 @@ services:
 networks:
   pump-network:
     driver: bridge
-
-volumes:
-  pump-config:
-    driver: local
