@@ -2,7 +2,7 @@
   "mcpServers": {
     "pump-finder": {
       "type": "streamable-http",
-      "url": "http://localhost:3001/api/mcp"
+      "url": "http://localhost:3001/mcp"
     }
   }
 }

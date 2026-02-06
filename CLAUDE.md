@@ -233,7 +233,7 @@ Der Service exponiert alle REST-Endpoints als MCP-Tools via `fastapi-mcp`. AI-As
 | Zugang | URL |
 |--------|-----|
 | Direkt (intern) | `http://localhost:8000/mcp` |
-| Via Nginx (extern) | `http://localhost:3001/api/mcp` |
+| Via Nginx (extern) | `http://localhost:3001/mcp` |
 
 ### MCP Tools
 
@@ -263,7 +263,7 @@ Die Datei `.mcp.json` im Projekt-Root konfiguriert Claude Code automatisch:
   "mcpServers": {
     "pump-finder": {
       "type": "streamable-http",
-      "url": "http://localhost:3001/api/mcp"
+      "url": "http://localhost:3001/mcp"
     }
   }
 }

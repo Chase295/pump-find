@@ -13,7 +13,7 @@ Pump Find besteht aus zwei Docker-Services hinter einem gemeinsamen Nginx Revers
                          │                                  │
                          │   /        → React UI            │
                          │   /api/*   → Backend             │
-                         │   /api/mcp → Backend (SSE)       │
+                         │   /mcp → Backend (SSE)       │
                          └──────────────┬───────────────────┘
                                         │ Docker Network
                          ┌──────────────▼───────────────────┐
@@ -197,7 +197,7 @@ mcp.mount_http(mount_path="/mcp")
 | Zugang | URL |
 |--------|-----|
 | Direkt (intern) | `http://localhost:8000/mcp` |
-| Via Nginx (extern) | `http://localhost:3001/api/mcp` |
+| Via Nginx (extern) | `http://localhost:3001/mcp` |
 
 ### Verfügbare MCP-Tools
 
@@ -229,7 +229,7 @@ Die Datei `.mcp.json` im Projekt-Root konfiguriert kompatible AI-Clients automat
   "mcpServers": {
     "pump-finder": {
       "type": "streamable-http",
-      "url": "http://localhost:3001/api/mcp"
+      "url": "http://localhost:3001/mcp"
     }
   }
 }
@@ -248,7 +248,7 @@ Die Datei `.mcp.json` im Projekt-Root konfiguriert kompatible AI-Clients automat
 Der Nginx Reverse Proxy hat spezielle Settings für den MCP-Server:
 
 ```nginx
-location /api/mcp {
+location /mcp {
     proxy_pass http://pump-find-backend:8000/mcp;
 
     # Streamable HTTP + SSE Support
