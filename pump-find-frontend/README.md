@@ -1,17 +1,17 @@
-# 🚀 Pump Service UI
+# Pump Find Frontend
 
-Professionelle Web-UI für die Verwaltung und Überwachung des vereinten Pump Services.
+Professionelle Web-UI für die Verwaltung und Überwachung von Pump Find.
 
-## 📋 Überblick
+## Überblick
 
 Diese React + TypeScript + Vite Anwendung bietet eine moderne Weboberfläche zur:
 
-- ✅ **Live-Monitoring** des Service-Status
-- ✅ **Konfigurationsverwaltung** (n8n, Datenbank, Cache)
-- ✅ **Log-Überwachung** mit Auto-Refresh
-- ✅ **Responsive Design** für Desktop & Mobile
+- **Live-Monitoring** des Service-Status
+- **Konfigurationsverwaltung** (n8n, Datenbank, Cache)
+- **Log-Überwachung** mit Auto-Refresh
+- **Responsive Design** für Desktop & Mobile
 
-## 🛠️ Technologie-Stack
+## Technologie-Stack
 
 - **React 18** - Moderne UI-Bibliothek
 - **TypeScript** - Type-Sichere Entwicklung
@@ -22,7 +22,7 @@ Diese React + TypeScript + Vite Anwendung bietet eine moderne Weboberfläche zur
 - **Axios** - HTTP-Client
 - **Zustand** - State-Management
 
-## 🚀 Schnellstart
+## Schnellstart
 
 ### Entwicklung
 ```bash
@@ -52,10 +52,10 @@ docker-compose -f docker-compose.ui.yml up -d
 # UI ist verfügbar auf http://localhost:3000
 ```
 
-## 📁 Projekt-Struktur
+## Projekt-Struktur
 
 ```
-pump-ui/
+pump-find-frontend/
 ├── src/
 │   ├── components/     # Wiederverwendbare Komponenten
 │   ├── pages/         # Hauptseiten (Dashboard, Config, Logs)
@@ -70,36 +70,36 @@ pump-ui/
 └── package.json       # Dependencies & Scripts
 ```
 
-## 🎯 Features
+## Features
 
-### 📊 Dashboard
+### Dashboard
 - **Live-Status** aller Service-Komponenten
 - **Cache-Statistiken** (aktive Coins, abgelaufene)
 - **Discovery-Metriken** (Coins gefunden, n8n-Status)
 - **Tracking-Übersicht** (aktive Coins, Trades)
 - **Uptime-Anzeige** und Service-Gesundheit
 
-### ⚙️ Konfiguration
+### Konfiguration
 - **n8n-Einstellungen** (URL, HTTP-Methode)
 - **Datenbank-Konfiguration** (DSN, Connection-String)
 - **Performance-Parameter** (Cache-Zeit, Batch-Größe)
 - **Live-Updates** mit Validierung
 
-### 📋 Logs
+### Logs
 - **Service-Activity** Monitoring
 - **Auto-Refresh** konfigurierbar
 - **Log-Level** Indikatoren
 - **Download-Funktion** für Log-Files
 
-## 🚀 Deployment
+## Deployment
 
 ### Docker-Compose
 ```yaml
 # Vollständiges Setup mit UI + Service
 version: '3.8'
 services:
-  pump-ui:       # React UI (Port 3000)
-  pump-service:  # FastAPI Service (Port 8000)
+  pump-find-frontend:  # React UI (Port 3000)
+  pump-find-backend:   # FastAPI Service (Port 8000)
 ```
 
 ### Einzeln starten
@@ -110,7 +110,3 @@ npm run dev
 # UI mit Service
 docker-compose -f docker-compose.ui.yml up -d
 ```
-
-## 🎉 Fazit
-
-Diese professionelle React-UI bietet eine vollständige Verwaltungsoberfläche für den vereinten Pump-Service mit modernen Web-Technologien und exzellentem User Experience.

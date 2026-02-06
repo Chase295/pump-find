@@ -25,6 +25,7 @@ import {
   Storage as StorageIcon,
   Settings as SettingsIcon,
   Schedule as ScheduleIcon,
+  SmartToy as SmartToyIcon,
 } from '@mui/icons-material';
 import { usePumpStore } from '../stores/pumpStore';
 
@@ -185,7 +186,7 @@ const Info: React.FC = () => {
           variant="body2"
           sx={{ color: 'text.secondary', mb: 2, fontSize: { xs: '0.8rem', sm: '0.9rem' } }}
         >
-          Pump-Discover & Pump-Metric System
+          Pump Find System
         </Typography>
         <Alert severity="info" sx={{ maxWidth: 800, mx: 'auto', '& .MuiAlert-message': { fontSize: { xs: '0.75rem', sm: '0.875rem' } } }}>
           Vollständige Dokumentation aller Datenbank-Einträge, Berechnungen und Datenflüsse.
@@ -252,14 +253,15 @@ const Info: React.FC = () => {
 - API: https://deine-domain.com/api/*
 
 INTERNE ARCHITEKTUR:
-┌─────────────┐    ┌─────────────┐
-│  pump-ui    │◄──►│ pump-service│
-│  Port 3001  │    │  Port 8000  │
-│  Nginx Proxy│    │  Nur intern │
-└─────────────┘    └─────────────┘
+┌──────────────────┐    ┌──────────────────┐
+│ pump-find-       │◄──►│ pump-find-       │
+│ frontend         │    │ backend          │
+│ Port 3001        │    │ Port 8000        │
+│ Nginx Proxy      │    │ Nur intern       │
+└──────────────────┘    └──────────────────┘
      │
      ▼
-/api/* → pump-service:8000
+/api/* → pump-find-backend:8000
 UI    → static files`}
           </CodeBlock>
         </AccordionDetails>
@@ -281,7 +283,7 @@ UI    → static files`}
               <Card sx={{ bgcolor: 'rgba(76, 175, 80, 0.1)', border: '1px solid rgba(76, 175, 80, 0.3)', height: '100%' }}>
                 <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                   <Typography variant="body1" sx={{ color: '#4caf50', mb: 1, fontWeight: 'bold', fontSize: { xs: '0.9rem', sm: '1rem' } }}>
-                    Pump-Discover (Phase 0)
+                    Discovery (Phase 0)
                   </Typography>
                   <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>
                     <strong>Funktion:</strong> Neue Coins entdecken<br/>
@@ -296,7 +298,7 @@ UI    → static files`}
               <Card sx={{ bgcolor: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)', height: '100%' }}>
                 <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                   <Typography variant="body1" sx={{ color: '#ff9800', mb: 1, fontWeight: 'bold', fontSize: { xs: '0.9rem', sm: '1rem' } }}>
-                    Pump-Metric (Phase 1+)
+                    Metric Tracking (Phase 1+)
                   </Typography>
                   <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>
                     <strong>Funktion:</strong> Live-Trade-Tracking<br/>
@@ -476,7 +478,7 @@ Metadata (IPFS/Arweave):
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AnalyticsIcon sx={{ color: '#ff9800', fontSize: { xs: 20, sm: 24 } }} />
             <Typography variant={isMobile ? "body1" : "h6"} sx={{ color: '#ff9800', fontWeight: 'bold' }}>
-              4. Live-Tracking (Pump-Metric)
+              4. Live-Tracking
             </Typography>
           </Box>
         </AccordionSummary>
@@ -715,15 +717,15 @@ num_buys, num_sells, unique_wallets`}
             Container-Architektur
           </Typography>
           <CodeBlock>
-{`pump-service (API Backend):
+{`pump-find-backend (API Backend):
 - Image: python:3.11-slim
 - Port: 8000 (nur intern)
 - Volume: ./config:/app/config
 
-pump-ui (UI + Reverse Proxy):
+pump-find-frontend (UI + Reverse Proxy):
 - Build: node:22-alpine → nginx:alpine
 - Port: 3001 (extern)
-- Nginx: /api/* → pump-service:8000`}
+- Nginx: /api/* → pump-find-backend:8000`}
           </CodeBlock>
 
           <Typography variant="body2" sx={{ mb: 2, fontWeight: 'bold', color: '#f44336', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>
@@ -754,7 +756,7 @@ docker ps
 curl http://localhost:3001/api/health
 
 # Ressourcen
-docker stats pump-service pump-ui
+docker stats pump-find-backend pump-find-frontend
 
 # Unhealthy Container
 docker ps --filter "health=unhealthy"`}
@@ -820,6 +822,140 @@ Charts: Recharts v3.6`}
 Stream-Stats: alle 10 Sekunden
 Config: einmalig beim Laden`}
           </CodeBlock>
+        </AccordionDetails>
+      </Accordion>
+
+      {/* 9. MCP Server */}
+      <Accordion sx={{ mb: 2, bgcolor: 'rgba(0, 188, 212, 0.1)', border: '1px solid rgba(0, 188, 212, 0.3)' }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SmartToyIcon sx={{ color: '#00bcd4', fontSize: { xs: 20, sm: 24 } }} />
+            <Typography variant={isMobile ? "body1" : "h6"} sx={{ color: '#00bcd4', fontWeight: 'bold' }}>
+              9. MCP Server (Model Context Protocol)
+            </Typography>
+            <Chip label="NEU" size="small" sx={{ ml: 1, fontSize: { xs: '0.6rem', sm: '0.7rem' }, bgcolor: '#00bcd4', color: 'white' }} />
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Alert severity="info" sx={{ mb: 2, '& .MuiAlert-message': { fontSize: { xs: '0.75rem', sm: '0.875rem' } } }}>
+            AI-Assistenten (Claude Code, Claude Desktop, Cursor) können per MCP direkt mit dem Service interagieren.
+          </Alert>
+
+          <Typography variant="body2" sx={{ mb: 2, fontWeight: 'bold', color: '#00bcd4', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>
+            Verbindung
+          </Typography>
+          <CodeBlock>
+{`MCP Transport: SSE (Server-Sent Events)
+
+Direkt (intern):  http://localhost:8000/mcp
+Via Nginx (extern): http://localhost:3001/api/mcp
+
+Messages-Endpoint: POST /mcp/messages/?session_id=...`}
+          </CodeBlock>
+
+          <Typography variant="body2" sx={{ mb: 2, fontWeight: 'bold', color: '#00bcd4', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>
+            Verfügbare MCP-Tools ({14})
+          </Typography>
+
+          <Grid container spacing={1} sx={{ mb: 2 }}>
+            {[
+              { name: 'get_health', desc: 'Service-Status & Live-Daten', cat: 'System' },
+              { name: 'get_metrics', desc: 'Prometheus-Metriken', cat: 'System' },
+              { name: 'get_config', desc: 'Konfiguration lesen', cat: 'Config' },
+              { name: 'update_config', desc: 'Konfiguration ändern', cat: 'Config' },
+              { name: 'reload_config', desc: 'Config + Phasen neu laden', cat: 'Config' },
+              { name: 'list_phases', desc: 'Alle Phasen auflisten', cat: 'Phasen' },
+              { name: 'create_phase', desc: 'Neue Phase erstellen', cat: 'Phasen' },
+              { name: 'update_phase', desc: 'Phase bearbeiten', cat: 'Phasen' },
+              { name: 'delete_phase', desc: 'Phase löschen', cat: 'Phasen' },
+              { name: 'get_streams', desc: 'Aktive Coin-Streams', cat: 'Daten' },
+              { name: 'get_stream_stats', desc: 'Stream-Statistiken', cat: 'Daten' },
+              { name: 'get_recent_metrics', desc: 'Letzte Metriken aus DB', cat: 'Daten' },
+              { name: 'get_coin_detail', desc: 'Vollständige Coin-Daten', cat: 'Daten' },
+              { name: 'get_coin_analytics', desc: 'Coin-Performance', cat: 'Daten' },
+            ].map((tool) => (
+              <Grid key={tool.name} size={{ xs: 12, sm: 6 }}>
+                <Box sx={{
+                  p: { xs: 1, sm: 1.5 },
+                  bgcolor: 'rgba(0,0,0,0.2)',
+                  borderRadius: 1,
+                  borderLeft: `3px solid ${
+                    tool.cat === 'System' ? '#4caf50' :
+                    tool.cat === 'Config' ? '#ff9800' :
+                    tool.cat === 'Phasen' ? '#9c27b0' : '#00bcd4'
+                  }`,
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Typography variant="body2" sx={{
+                      fontFamily: 'monospace',
+                      fontWeight: 'bold',
+                      color: '#00bcd4',
+                      fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                    }}>
+                      {tool.name}
+                    </Typography>
+                    <Chip
+                      label={tool.cat}
+                      size="small"
+                      sx={{
+                        fontSize: { xs: '0.55rem', sm: '0.6rem' },
+                        height: 18,
+                        bgcolor: tool.cat === 'System' ? 'rgba(76,175,80,0.2)' :
+                                 tool.cat === 'Config' ? 'rgba(255,152,0,0.2)' :
+                                 tool.cat === 'Phasen' ? 'rgba(156,39,176,0.2)' : 'rgba(0,188,212,0.2)',
+                      }}
+                    />
+                  </Box>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: { xs: '0.65rem', sm: '0.7rem' } }}>
+                    {tool.desc}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Typography variant="body2" sx={{ mb: 2, fontWeight: 'bold', color: '#00bcd4', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>
+            Client-Konfiguration
+          </Typography>
+
+          <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary', fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>
+            Die Datei <code>.mcp.json</code> im Projekt-Root konfiguriert Claude Code automatisch:
+          </Typography>
+
+          <CodeBlock>
+{`// .mcp.json
+{
+  "mcpServers": {
+    "pump-finder": {
+      "type": "sse",
+      "url": "http://localhost:3001/api/mcp"
+    }
+  }
+}`}
+          </CodeBlock>
+
+          <Typography variant="body2" sx={{ mb: 2, fontWeight: 'bold', color: '#00bcd4', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>
+            Technologie
+          </Typography>
+
+          <CodeBlock>
+{`Library:   fastapi-mcp >= 0.3.0
+Transport: SSE (Server-Sent Events)
+Protokoll: MCP 2025-11-25
+Mount:     mcp.mount_sse(mount_path="/mcp")
+
+Funktionsweise:
+1. Client öffnet GET /mcp (SSE-Stream)
+2. Server sendet session_id
+3. Client sendet JSON-RPC via POST /mcp/messages/
+4. Antworten kommen über den SSE-Stream`}
+          </CodeBlock>
+
+          <Alert severity="success" sx={{ '& .MuiAlert-message': { fontSize: { xs: '0.75rem', sm: '0.875rem' } } }}>
+            Alle 14 REST-Endpoints werden automatisch als MCP-Tools exponiert — keine separate Tool-Definition nötig.
+          </Alert>
         </AccordionDetails>
       </Accordion>
 

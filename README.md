@@ -1,8 +1,8 @@
-# 🚀 Unified Pump Service
+# 🚀 Pump Find
 
-**Vereinter Pump-Discover und Pump-Metric Service mit FastAPI**
+**Pump Find Backend mit FastAPI**
 
-Dieses Projekt kombiniert die Funktionalität von pump-discover und pump-metric in einem einzigen Service, der nur eine WebSocket-Verbindung zu pumpportal.fun benötigt.
+Dieses Projekt kombiniert Discovery und Metric-Tracking in einem einzigen Service, der nur eine WebSocket-Verbindung zu pumpportal.fun benötigt.
 
 ## 📁 Projekt-Struktur
 

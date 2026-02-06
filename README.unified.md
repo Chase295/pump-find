@@ -1,7 +1,7 @@
-# 🚀 Unified Pump Service
+# 🚀 Pump Find
 
 ## Übersicht
-Der **Unified Pump Service** vereint `pump-discover` und `pump-metric` in einem einzigen Service, der nur **eine WebSocket-Verbindung** zu pumpportal.fun benötigt.
+**Pump Find** vereint `pump-discover` und `pump-metric` in einem einzigen Service, der nur **eine WebSocket-Verbindung** zu pumpportal.fun benötigt.
 
 ### ✨ Was macht dieser Service?
 - **🔍 Coin Discovery**: Neue Coins werden erkannt, gefiltert und an n8n gesendet
@@ -366,7 +366,7 @@ POST /reload-config
 
 ## 🚀 Erfolgreiche Vereinigung!
 
-Der **Unified Pump Service** erreicht alle Ziele:
+**Pump Find** erreicht alle Ziele:
 
 1. ✅ **Eine WebSocket-Verbindung** statt zwei
 2. ✅ **Alle Features erhalten** - nichts geht verloren

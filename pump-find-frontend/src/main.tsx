@@ -5,7 +5,7 @@ const app = document.getElementById('app')
 if (app) {
   app.innerHTML = `
     <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
-      <h1 style="color: #1976d2;">🚀 Pump Service UI</h1>
+      <h1 style="color: #1976d2;">🚀 Pump Find</h1>
       <p>JavaScript läuft! React wird geladen...</p>
       <div style="margin: 20px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;">
         <p>✅ Vite Dev Server: Port 5173</p>

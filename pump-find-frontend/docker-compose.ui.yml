@@ -1,10 +1,10 @@
 version: '3.8'
 services:
-  pump-ui:
+  pump-find-frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pump-ui
+    container_name: pump-find-frontend
     restart: unless-stopped
     environment:
       # API Base URL zum vereinten Service (von außen erreichbar)
@@ -12,9 +12,9 @@ services:
     ports:
       - "3000:80"  # UI auf Port 3000
     depends_on:
-      - pump-service
+      - pump-find-backend
     networks:
-      - pump-network
+      - pump-find-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
@@ -22,12 +22,12 @@ services:
       retries: 3
       start_period: 10s
 
-  # Vereinter Pump-Service
-  pump-service:
+  # Pump Find Backend
+  pump-find-backend:
     build:
       context: ..
       dockerfile: Dockerfile.unified
-    container_name: pump-service
+    container_name: pump-find-backend
     restart: unless-stopped
     environment:
       # Datenbank
@@ -41,7 +41,7 @@ services:
       - WS_PING_TIMEOUT=10
       - WS_CONNECTION_TIMEOUT=30
 
-      # Discovery (aus pump-discover)
+      # Discovery
       - N8N_WEBHOOK_URL=https://n8n-ai.chase295.de/webhook/pump-discover-beta
       - N8N_WEBHOOK_METHOD=POST
       - N8N_RETRY_DELAY=5
@@ -56,7 +56,7 @@ services:
       - DB_REFRESH_INTERVAL=10
       - DB_RETRY_DELAY=5
 
-      # Metric-System (aus pump-metric)
+      # Metric-System
       - SOL_RESERVES_FULL=85.0
       - AGE_CALCULATION_OFFSET_MIN=60
       - TRADE_BUFFER_SECONDS=180
@@ -71,7 +71,7 @@ services:
     volumes:
       - ../config:/app/config:rw
     networks:
-      - pump-network
+      - pump-find-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -80,9 +80,9 @@ services:
       start_period: 40s
 
 networks:
-  pump-network:
+  pump-find-network:
     driver: bridge
 
 volumes:
-  pump-config:
+  pump-find-config:
     driver: local

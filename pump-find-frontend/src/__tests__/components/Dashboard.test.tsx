@@ -255,7 +255,7 @@ describe('Dashboard Component', () => {
 
       // Warte kurz, damit der Component mounted ist
       await waitFor(() => {
-        expect(screen.getByText(/Pump Service Dashboard/i)).toBeInTheDocument();
+        expect(screen.getByText(/Pump Find Dashboard/i)).toBeInTheDocument();
       });
 
       unmount();

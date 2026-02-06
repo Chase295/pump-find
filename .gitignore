@@ -52,7 +52,7 @@ npm-debug.log*
 .dockerignore
 
 # Build artifacts
-pump-ui/dist/
+pump-find-frontend/dist/
 
 # Trash (bereits archiviert)
 trash/

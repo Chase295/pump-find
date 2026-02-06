@@ -1,5 +1,5 @@
 """
-Database migration utilities for Pump Service
+Database migration utilities for Pump Find
 """
 
 import asyncpg
@@ -7,7 +7,7 @@ import os
 
 async def check_and_create_schema(pool: asyncpg.Pool):
     """
-    Erstellt die notwendigen Tabellen und Views für den vereinten Pump Service
+    Erstellt die notwendigen Tabellen und Views für Pump Find
     """
     try:
         # Lade Schema-Dateien

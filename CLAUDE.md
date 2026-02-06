@@ -1,4 +1,4 @@
-# CLAUDE.md - Pump Finder Project
+# CLAUDE.md - Pump Find Project
 
 ## Project Overview
 
@@ -26,7 +26,7 @@
 │   ├── unit/                   # Unit tests
 │   ├── integration/            # Integration tests
 │   └── stress/                 # Stress/load tests
-├── pump-ui/                    # React TypeScript frontend
+├── pump-find-frontend/                    # React TypeScript frontend
 │   ├── src/pages/              # Dashboard, Config, Metrics, Logs, Info, Phases
 │   ├── src/services/api.ts     # Axios HTTP client
 │   ├── src/stores/pumpStore.ts # Zustand state management
@@ -52,17 +52,17 @@ docker compose up -d
 curl http://localhost:3001/api/health
 
 # View logs
-docker compose logs -f pump-service
+docker compose logs -f pump-find-backend
 
 # Frontend development
-cd pump-ui && npm install && npm run dev
+cd pump-find-frontend && npm install && npm run dev
 
 # Run backend tests (201 tests)
 pip install -r requirements.test.txt
 pytest tests/ -v
 
 # Run frontend tests (101 tests)
-cd pump-ui && npm test
+cd pump-find-frontend && npm test
 ```
 
 ## Test Suite
@@ -90,7 +90,7 @@ pytest tests/stress/ -v             # Stress tests
 
 ### Frontend (vitest) - 101 Tests
 ```bash
-cd pump-ui
+cd pump-find-frontend
 npm test                            # Run all tests
 npm test -- --watch                 # Watch mode
 ```
@@ -184,8 +184,8 @@ Coins progress through tracking phases based on age. Each phase has:
 
 | Service | Port | Description |
 |---------|------|-------------|
-| pump-ui (Nginx) | 3001 | UI + API Proxy |
-| pump-service | 8000 | FastAPI (internal) |
+| pump-find-frontend (Nginx) | 3001 | UI + API Proxy |
+| pump-find-backend | 8000 | FastAPI (internal) |
 
 **Note:** Only port 3001 is exposed externally. The backend is accessed via `/api/*` proxy.
 
@@ -216,6 +216,51 @@ All UI components are optimized for mobile:
 - Phases: Responsive table, inline editing
 - Config: Adaptive form layouts
 - Logs: Button wrapping, container height adjustments
+
+## MCP Server (Model Context Protocol)
+
+Der Service exponiert alle REST-Endpoints als MCP-Tools via `fastapi-mcp`. AI-Assistenten (Claude Code, Claude Desktop, Cursor) können direkt mit dem Service interagieren.
+
+### Verbindung
+
+| Zugang | URL |
+|--------|-----|
+| Direkt (intern) | `http://localhost:8000/mcp` |
+| Via Nginx (extern) | `http://localhost:3001/api/mcp` |
+
+### MCP Tools
+
+| Tool | Beschreibung |
+|------|-------------|
+| `get_health` | Service-Health mit detaillierten Stats |
+| `get_metrics` | Prometheus Metriken |
+| `get_config` | Aktuelle Konfiguration |
+| `update_config` | Konfiguration zur Laufzeit ändern |
+| `reload_config` | Konfiguration und Phasen neu laden |
+| `list_phases` | Alle Tracking-Phasen auflisten |
+| `create_phase` | Neue Phase erstellen |
+| `update_phase` | Phase bearbeiten (Live-Reload) |
+| `delete_phase` | Phase löschen (Streams migrieren) |
+| `get_streams` | Aktive Coin-Streams |
+| `get_stream_stats` | Stream-Statistiken nach Phase |
+| `get_recent_metrics` | Letzte Metriken aus DB |
+| `get_coin_detail` | Vollständige Coin-Daten |
+| `get_coin_analytics` | Coin-Performance-Analyse |
+
+### Client-Konfiguration
+
+Die Datei `.mcp.json` im Projekt-Root konfiguriert Claude Code automatisch:
+
+```json
+{
+  "mcpServers": {
+    "pump-finder": {
+      "type": "sse",
+      "url": "http://localhost:3001/api/mcp"
+    }
+  }
+}
+```
 
 ## Docker Deployment
 

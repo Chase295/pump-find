@@ -12,7 +12,7 @@ if (app) {
       React.createElement(App)
     )
   );
-  console.log('🚀 Pump Service UI: React erfolgreich geladen!');
+  console.log('🚀 Pump Find Frontend: React erfolgreich geladen!');
 } else {
   console.error('App element not found!');
 }

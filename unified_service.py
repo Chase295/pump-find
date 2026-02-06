@@ -1,5 +1,5 @@
-# 🚀 UNIFIED PUMP SERVICE
-# Vereint pump-discover und pump-metric in einem Service
+# 🚀 PUMP FIND BACKEND
+# Discovery + Metrics in einem Service
 # Nur 1 WebSocket-Verbindung zu pumpportal.fun
 # FastAPI-Version mit automatischer API-Dokumentation
 
@@ -43,9 +43,9 @@ import uvicorn
 from db_migration import check_and_create_schema
 
 # === KONFIGURATION ===
-# Kombiniert aus pump-discover und pump-metric
+# Kombiniert Discovery und Metric
 
-# Datenbank (aus pump-metric)
+# Datenbank
 DB_DSN = os.getenv("DB_DSN", "")  # Muss in .env gesetzt werden
 DB_REFRESH_INTERVAL = int(os.getenv("DB_REFRESH_INTERVAL", "10"))
 DB_RETRY_DELAY = int(os.getenv("DB_RETRY_DELAY", "5"))
@@ -59,7 +59,7 @@ WS_PING_TIMEOUT = int(os.getenv("WS_PING_TIMEOUT", "5"))   # Schnellere Ping-Erk
 WS_CONNECTION_TIMEOUT = int(os.getenv("WS_CONNECTION_TIMEOUT", "30"))  # 30s statt 300s - schneller erkennen
 HEALTH_PORT = int(os.getenv("HEALTH_PORT", "8000"))
 
-# Discovery (aus pump-discover)
+# Discovery
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "").strip()
 N8N_WEBHOOK_METHOD = os.getenv("N8N_WEBHOOK_METHOD", "POST").upper()
 N8N_RETRY_DELAY = int(os.getenv("N8N_RETRY_DELAY", "5"))
@@ -71,7 +71,7 @@ SPAM_BURST_WINDOW = int(os.getenv("SPAM_BURST_WINDOW", "30"))  # Sekunden für S
 # Cache-System (NEU - 120 Sekunden)
 COIN_CACHE_SECONDS = int(os.getenv("COIN_CACHE_SECONDS", "120"))  # 120s Cache für neue Coins
 
-# Metric-System (aus pump-metric)
+# Metric-System
 SOL_RESERVES_FULL = float(os.getenv("SOL_RESERVES_FULL", "85.0"))
 AGE_CALCULATION_OFFSET_MIN = int(os.getenv("AGE_CALCULATION_OFFSET_MIN", "60"))
 TRADE_BUFFER_SECONDS = int(os.getenv("TRADE_BUFFER_SECONDS", "180"))  # Für aktive Coins
@@ -130,7 +130,7 @@ def load_config_from_file():
 # Lade Config beim Start
 load_config_from_file()
 
-# Regex für Bad Names (aus pump-discover)
+# Regex für Bad Names
 BAD_NAMES = re.compile(rf'({BAD_NAMES_PATTERN})', re.IGNORECASE)
 
 # Zeitzonen
@@ -138,7 +138,7 @@ GERMAN_TZ = ZoneInfo("Europe/Berlin")
 
 # === PROMETHEUS METRIKEN ===
 # Kombiniert aus beiden Systemen
-    # Discovery-Metriken (aus pump-discover)
+    # Discovery-Metriken
 coins_received = PromCounter("unified_coins_received_total", "Anzahl empfangener Coins")
 coins_filtered = PromCounter("unified_coins_filtered_total", "Anzahl gefilterter Coins", ["reason"])
 coins_sent_n8n = PromCounter("unified_coins_sent_n8n_total", "Anzahl an n8n gesendeter Coins")
@@ -152,7 +152,7 @@ cache_size = Gauge("unified_cache_size", "Anzahl Coins im 120s Cache")
 cache_activations = PromCounter("unified_cache_activations_total", "Cache-Aktivierungen")
 cache_expirations = PromCounter("unified_cache_expirations_total", "Cache-Abläufe")
 
-# Metric-Metriken (aus pump-metric)
+# Metric-Metriken
 trades_received = PromCounter("unified_trades_received_total", "Anzahl empfangener Trades")
 trades_processed = PromCounter("unified_trades_processed_total", "Anzahl verarbeiteter Trades")
 metrics_saved = PromCounter("unified_metrics_saved_total", "Anzahl gespeicherter Metriken")
@@ -170,13 +170,13 @@ connection_duration = Gauge("unified_connection_duration_seconds", "Dauer der ak
 db_query_duration = Histogram("unified_db_query_duration_seconds", "Dauer von DB-Queries")
 flush_duration = Histogram("unified_flush_duration_seconds", "Dauer von Metric-Flushes")
 
-# Batching-Metriken (aus pump-metric)
+# Batching-Metriken
 pending_subscriptions = Gauge("unified_pending_subscriptions", "Anzahl wartender Subscription-Requests")
 batches_sent_total = PromCounter("unified_batches_sent_total", "Anzahl gesendeter Subscription-Batches")
 subscriptions_batched_total = PromCounter("unified_subscriptions_batched_total", "Anzahl über Batch abonnierter Coins")
 batch_size_histogram = Histogram("unified_batch_size", "Größe der Subscription-Batches", buckets=[1, 2, 5, 10, 25, 50])
 
-# ATH-Metriken (aus pump-metric)
+# ATH-Metriken
 ath_updates_total = PromCounter("unified_ath_updates_total", "Anzahl ATH-Updates in DB")
 ath_cache_size = Gauge("unified_ath_cache_size", "Anzahl Coins im ATH-Cache")
 
@@ -436,7 +436,7 @@ def calculate_window_analytics(current_data: dict, historical_data: list, target
 async def lifespan(app: FastAPI):
     """FastAPI Lifespan Manager für Startup/Shutdown"""
     # Startup
-    print("🚀 Starting Unified Pump Service...")
+    print("🚀 Starting Pump Find Backend...")
     global _unified_instance
     service = UnifiedService()
     _unified_instance = service
@@ -447,7 +447,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    print("👋 Shutting down Unified Pump Service...")
+    print("👋 Shutting down Pump Find Backend...")
     background_task.cancel()
     try:
         await background_task
@@ -456,7 +456,7 @@ async def lifespan(app: FastAPI):
 
 # === FASTAPI APP ===
 app = FastAPI(
-    title="Unified Pump Service",
+    title="Pump Find Backend",
     description="Vereinter Pump-Discover und Pump-Metric Service mit automatischer API-Dokumentation",
     version="1.0.0",
     lifespan=lifespan
@@ -476,7 +476,7 @@ app.add_middleware(
 )
 
 # === ANALYTICS ENDPOINT (placed after app definition for proper routing) ===
-@app.get("/analytics/{mint}")
+@app.get("/analytics/{mint}", operation_id="get_coin_analytics")
 async def get_coin_analytics(mint: str, windows: str = "30s,1m,3m,5m,15m,30m,1h"):
     """Einfache Test-Implementierung des Analytics-Endpunkts"""
     return {
@@ -604,7 +604,7 @@ class CoinCache:
             "newest_age_seconds": int(newest_age)
         }
 
-# === FILTER-SYSTEM (aus pump-discover) ===
+# === FILTER-SYSTEM ===
 class CoinFilter:
     """Filtert Coins basierend auf Bad Names und Spam-Burst"""
 
@@ -656,7 +656,7 @@ async def health_options():
         }
     )
 
-@app.get("/health")
+@app.get("/health", operation_id="get_health")
 async def health_check(response: Response):
     """Health-Check Endpoint mit detaillierten Infos"""
     try:
@@ -786,7 +786,7 @@ async def metrics_options():
         }
     )
 
-@app.get("/metrics", response_class=PlainTextResponse)
+@app.get("/metrics", response_class=PlainTextResponse, operation_id="get_metrics")
 async def metrics_handler(response: Response):
     """Prometheus Metrics Endpoint"""
     uptime_seconds.set(time.time() - unified_status["start_time"])
@@ -807,7 +807,7 @@ async def metrics_handler(response: Response):
         }
     )
 
-@app.post("/reload-config", response_model=ConfigReloadResponse)
+@app.post("/reload-config", response_model=ConfigReloadResponse, operation_id="reload_config")
 async def reload_config():
     """Lädt die Konfiguration und Phasen neu"""
     try:
@@ -886,7 +886,7 @@ def save_config_to_env(updates: Dict[str, Any]) -> bool:
     # Schreibe zurück in Datei
     try:
         with open(config_file, 'w') as f:
-            f.write("# Unified Pump Service Configuration\n")
+            f.write("# Pump Find Configuration\n")
             f.write("# Diese Datei wird vom Service zur Laufzeit geladen\n\n")
 
             for key, value in sorted(current_config.items()):
@@ -899,7 +899,7 @@ def save_config_to_env(updates: Dict[str, Any]) -> bool:
         print(f"❌ Fehler beim Speichern der Config-Datei: {e}")
         return False
 
-@app.put("/config", response_model=ConfigUpdateResponse)
+@app.put("/config", response_model=ConfigUpdateResponse, operation_id="update_config")
 async def update_config(config_update: ConfigUpdateRequest, response: Response):
     """Aktualisiert die Konfiguration zur Laufzeit und speichert sie persistent"""
     try:
@@ -1032,7 +1032,7 @@ async def config_options():
         }
     )
 
-@app.get("/config", response_model=Dict[str, Any])
+@app.get("/config", response_model=Dict[str, Any], operation_id="get_config")
 async def get_current_config(response: Response):
     """Zeigt die aktuelle Konfiguration an"""
     try:
@@ -1067,7 +1067,7 @@ async def get_current_config(response: Response):
         raise HTTPException(status_code=500, detail=f"Failed to get config: {str(e)}")
 
 
-@app.get("/database/phases")
+@app.get("/database/phases", operation_id="list_phases")
 async def get_phases():
     """Gibt alle Phasen aus der ref_coin_phases Tabelle zurück"""
     try:
@@ -1085,7 +1085,7 @@ async def get_phases():
         raise HTTPException(status_code=500, detail=f"Failed to get phases: {str(e)}")
 
 
-@app.put("/database/phases/{phase_id}")
+@app.put("/database/phases/{phase_id}", operation_id="update_phase")
 async def update_phase(phase_id: int, phase_data: PhaseUpdateRequest):
     """Aktualisiert eine Phase und lädt Konfiguration für aktive Streams neu"""
     try:
@@ -1148,7 +1148,7 @@ async def update_phase(phase_id: int, phase_data: PhaseUpdateRequest):
         raise HTTPException(status_code=500, detail=f"Failed to update phase: {str(e)}")
 
 
-@app.post("/database/phases")
+@app.post("/database/phases", operation_id="create_phase")
 async def create_phase(phase_data: PhaseCreateRequest):
     """Erstellt eine neue Phase zwischen den bestehenden Phasen"""
     try:
@@ -1210,7 +1210,7 @@ async def create_phase(phase_data: PhaseCreateRequest):
         raise HTTPException(status_code=500, detail=f"Failed to create phase: {str(e)}")
 
 
-@app.delete("/database/phases/{phase_id}")
+@app.delete("/database/phases/{phase_id}", operation_id="delete_phase")
 async def delete_phase(phase_id: int):
     """Löscht eine Phase und verschiebt betroffene Streams zur nächsten Phase"""
     try:
@@ -1284,7 +1284,7 @@ async def delete_phase(phase_id: int):
         raise HTTPException(status_code=500, detail=f"Failed to delete phase: {str(e)}")
 
 
-@app.get("/database/streams")
+@app.get("/database/streams", operation_id="get_streams")
 async def get_streams(limit: int = 50):
     """Gibt Streams aus der coin_streams Tabelle zurück"""
     try:
@@ -1308,7 +1308,7 @@ async def get_streams(limit: int = 50):
         raise HTTPException(status_code=500, detail=f"Failed to get streams: {str(e)}")
 
 
-@app.get("/database/streams/stats")
+@app.get("/database/streams/stats", operation_id="get_stream_stats")
 async def get_streams_stats():
     """Gibt Statistiken über Streams und Phasen zurück"""
     try:
@@ -1344,7 +1344,7 @@ async def get_streams_stats():
         raise HTTPException(status_code=500, detail=f"Failed to get stream stats: {str(e)}")
 
 
-@app.get("/database/metrics")
+@app.get("/database/metrics", operation_id="get_recent_metrics")
 async def get_recent_metrics(limit: int = 100, mint: Optional[str] = None):
     """Gibt die letzten Metriken aus der coin_metrics Tabelle zurück
 
@@ -1386,6 +1386,79 @@ async def get_recent_metrics(limit: int = 100, mint: Optional[str] = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
 
+
+@app.get("/database/coins/{mint}", operation_id="get_coin_detail")
+async def get_coin_detail(mint: str):
+    """Gibt vollständige Coin-Daten zurück: Stammdaten, Stream, letzte Metriken und Live-Tracking"""
+    try:
+        if not _unified_instance or not _unified_instance.pool:
+            raise HTTPException(status_code=503, detail="Database not connected")
+
+        # 1. Stammdaten aus discovered_coins
+        coin_row = await _unified_instance.pool.fetchrow(
+            "SELECT * FROM discovered_coins WHERE token_address = $1", mint
+        )
+        if not coin_row:
+            raise HTTPException(status_code=404, detail=f"Coin {mint} nicht gefunden")
+
+        # 2. Stream-Daten mit Phase-Name
+        stream_row = await _unified_instance.pool.fetchrow("""
+            SELECT cs.*, rcp.name as phase_name
+            FROM coin_streams cs
+            LEFT JOIN ref_coin_phases rcp ON cs.current_phase_id = rcp.id
+            WHERE cs.token_address = $1
+        """, mint)
+
+        # 3. Letzte Metriken
+        metrics_row = await _unified_instance.pool.fetchrow(
+            "SELECT * FROM coin_metrics WHERE mint = $1 ORDER BY timestamp DESC LIMIT 1", mint
+        )
+
+        # 4. Live-Tracking aus In-Memory-Daten
+        live_tracking = None
+        if mint in _unified_instance.watchlist:
+            entry = _unified_instance.watchlist[mint]
+            buf = entry["buffer"]
+            now_ts = time.time()
+
+            live_tracking = {
+                "price_open": buf["open"],
+                "price_high": buf["high"] if buf["high"] != -1 else None,
+                "price_low": buf["low"] if buf["low"] != float("inf") else None,
+                "price_close": buf["close"],
+                "volume_sol": buf["vol"],
+                "buy_volume_sol": buf["vol_buy"],
+                "sell_volume_sol": buf["vol_sell"],
+                "num_buys": buf["buys"],
+                "num_sells": buf["sells"],
+                "unique_wallets": len(buf["wallets"]),
+                "market_cap_sol": buf["mcap"],
+                "interval_seconds": entry["interval"],
+                "next_flush_seconds": round(entry["next_flush"] - now_ts, 1),
+            }
+        elif mint in _unified_instance.coin_cache.cache:
+            cache_entry = _unified_instance.coin_cache.cache[mint]
+            live_tracking = {
+                "status": "in_cache",
+                "discovered_at": cache_entry["discovered_at"],
+                "n8n_sent": cache_entry["n8n_sent"],
+                "activated": cache_entry["activated"],
+                "cached_trades": len(cache_entry["trades"]),
+            }
+
+        return {
+            "coin": dict(coin_row),
+            "stream": dict(stream_row) if stream_row else None,
+            "latest_metrics": dict(metrics_row) if metrics_row else None,
+            "live_tracking": live_tracking,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get coin detail: {str(e)}")
+
+
 # === N8N INTEGRATION (FastAPI-Version mit httpx) ===
 import httpx
 
@@ -1425,7 +1498,7 @@ async def send_batch_to_n8n(batch):
     retry_count = 0
 
     payload = {
-        "source": "unified_pump_service",
+        "source": "pump_find_backend",
         "count": len(batch),
         "timestamp": datetime.utcnow().isoformat(),
         "data": batch
@@ -1511,15 +1584,15 @@ class UnifiedService:
         self.coin_cache = CoinCache(COIN_CACHE_SECONDS)
         self.coin_filter = CoinFilter(SPAM_BURST_WINDOW)
 
-        # Watchlist für aktive Coins (aus pump-metric)
+        # Watchlist für aktive Coins
         self.watchlist = {}  # {mint: entry}
         self.subscribed_mints = set()
 
-        # Trade-Buffer für aktive Coins (aus pump-metric)
+        # Trade-Buffer für aktive Coins
         self.trade_buffer = {}  # {mint: [(timestamp, trade_data), ...]}
         self.last_buffer_cleanup = time.time()
 
-        # ATH-Tracking (aus pump-metric)
+        # ATH-Tracking
         self.ath_cache = {}  # {mint: ath_price}
         self.dirty_aths = set()
         self.last_ath_flush = time.time()
@@ -1530,18 +1603,18 @@ class UnifiedService:
         self.stale_data_warnings = {}  # {mint: warning_count}
         self.last_saved_signatures = {}  # {mint: last_saved_data_signature}
 
-        # WebSocket Batching (aus pump-metric)
+        # WebSocket Batching
         self.pending_subscriptions = set()
         self.batching_task = None
         self.last_batch_flush = time.time()
 
-        # Discovery-Buffer (aus pump-discover)
+        # Discovery-Buffer
         self.discovery_buffer = []
         self.last_discovery_flush = time.time()
 
     # === DATENBANK METHODEN ===
     async def init_db_connection(self):
-        """Datenbank-Verbindung aufbauen (aus pump-metric)"""
+        """Datenbank-Verbindung aufbauen"""
         while True:
             try:
                 if self.pool:
@@ -1654,7 +1727,7 @@ class UnifiedService:
             raise
 
     async def get_active_streams(self):
-        """Lädt aktive Coin-Streams (aus pump-metric)"""
+        """Lädt aktive Coin-Streams"""
         try:
             with db_query_duration.time():
                 # Repair fehlende Streams
@@ -1787,7 +1860,7 @@ class UnifiedService:
             print(f"🚫 Coin {coin_data.get('symbol', '???')} gefiltert: {reason}", flush=True)
             return
 
-        # 2. Berechnungen (aus pump-discover)
+        # 2. Berechnungen
         v_tokens = coin_data.get("vTokensInBondingCurve", 0)
         market_cap = coin_data.get("marketCapSol", 0)
 
@@ -1845,7 +1918,7 @@ class UnifiedService:
                 buffer_size.set(0)
             self.last_discovery_flush = time.time()
 
-    # === METRIC-METHODEN (aus pump-metric) ===
+    # === METRIC-METHODEN ===
     def get_empty_buffer(self):
         """Leerer Buffer für neue Coins"""
         return {
@@ -1858,7 +1931,7 @@ class UnifiedService:
         }
 
     def process_trade(self, data):
-        """Verarbeitet einzelnen Trade (aus pump-metric)"""
+        """Verarbeitet einzelnen Trade"""
         mint = data["mint"]
         if mint not in self.watchlist:
             return
@@ -1966,7 +2039,7 @@ class UnifiedService:
             print(f"[WebSocket] ❌ Fehler bei Re-Subscribe für {mint[:8]}...: {e}", flush=True)
 
     async def flush_ath_updates(self):
-        """Schreibt ATH-Updates in DB (aus pump-metric)"""
+        """Schreibt ATH-Updates in DB"""
         if not self.dirty_aths:
             return
 
@@ -2005,7 +2078,7 @@ class UnifiedService:
             db_errors.labels(type="ath_update").inc()
 
     async def run_subscription_batching_task(self, ws):
-        """Batching-Task für WebSocket-Subscriptions (aus pump-metric)"""
+        """Batching-Task für WebSocket-Subscriptions"""
         batch_interval = 2.0
         max_batch_size = 50
 
@@ -2050,7 +2123,7 @@ class UnifiedService:
 
     # === LIFECYCLE-MANAGEMENT ===
     async def switch_phase(self, mint, old_phase, new_phase):
-        """Phase wechseln (aus pump-metric)"""
+        """Phase wechseln"""
         try:
             print(f"🆙 Phase {old_phase} -> {new_phase} für {mint[:8]}...", flush=True)
             async with self.pool.acquire() as conn:
@@ -2061,7 +2134,7 @@ class UnifiedService:
             db_errors.labels(type="update").inc()
 
     async def stop_tracking(self, mint, is_graduation=False):
-        """Tracking beenden (aus pump-metric)"""
+        """Tracking beenden"""
         try:
             if is_graduation:
                 print(f"🎉 GRADUATION: {mint[:8]}... geht zu Raydium!", flush=True)
@@ -2090,7 +2163,7 @@ class UnifiedService:
             coins_tracked.set(len(self.watchlist))
 
     async def check_lifecycle_and_flush(self, now_ts):
-        """Lifecycle-Prüfung und Metric-Flush (aus pump-metric)"""
+        """Lifecycle-Prüfung und Metric-Flush"""
         batch_data = []
         phases_in_batch = []
         now_utc = datetime.now(timezone.utc)
@@ -2229,7 +2302,7 @@ class UnifiedService:
                 db_errors.labels(type="insert").inc()
 
     def calculate_advanced_metrics(self, buf):
-        """Erweiterte Metriken berechnen (aus pump-metric)"""
+        """Erweiterte Metriken berechnen"""
         net_volume = buf["vol_buy"] - buf["vol_sell"]
 
         if buf["open"] and buf["open"] > 0:
@@ -2505,7 +2578,7 @@ class UnifiedService:
                 await self.init_db_connection()
 
     def cleanup_old_trades_from_buffer(self, now_ts):
-        """Buffer-Cleanup für aktive Coins (aus pump-metric)"""
+        """Buffer-Cleanup für aktive Coins"""
         cutoff_time = now_ts - TRADE_BUFFER_SECONDS
         total_removed = 0
 
@@ -2523,6 +2596,16 @@ class UnifiedService:
 
         buffer_size.set(sum(len(trades) for trades in self.trade_buffer.values()))
         return total_removed
+
+# === MCP SERVER ===
+from fastapi_mcp import FastApiMCP
+
+mcp = FastApiMCP(
+    app,
+    name="Pump Finder MCP",
+    description="MCP Server für den Pump Finder Crypto-Token Monitoring Service.",
+)
+mcp.mount_sse(mount_path="/mcp")
 
 # === FASTAPI STARTUP ===
 if __name__ == "__main__":
@@ -2551,7 +2634,7 @@ if __name__ == "__main__":
     print("=" * 60)
 
     # Starte WebSocket-Service
-    print("🚀 Starte Unified Pump Service (WebSocket)...", flush=True)
+    print("🚀 Starte Pump Find Backend (WebSocket)...", flush=True)
 
     # Erstelle Service-Instanz
     service = UnifiedService()

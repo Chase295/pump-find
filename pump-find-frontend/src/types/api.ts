@@ -1,4 +1,4 @@
-// API Type Definitions for Pump Service
+// API Type Definitions for Pump Find
 
 export interface CacheStats {
   total_coins: number;

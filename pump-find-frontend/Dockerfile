@@ -1,4 +1,4 @@
-# Pump UI - React + TypeScript + Vite
+# Pump Find Frontend - React + TypeScript + Vite
 FROM node:22-alpine
 
 WORKDIR /app

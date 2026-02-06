@@ -1,4 +1,4 @@
-# Vereinter Pump Service - Discovery + Metrics
+# Pump Find Backend - Discovery + Metrics
 FROM python:3.11-slim
 
 WORKDIR /app

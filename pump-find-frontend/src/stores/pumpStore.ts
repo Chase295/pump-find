@@ -133,7 +133,7 @@ export const usePumpStore = create<PumpStore>()(
 
     }),
     {
-      name: 'pump-store',
+      name: 'pump-find-store',
     }
   )
 );
