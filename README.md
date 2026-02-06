@@ -51,21 +51,18 @@ open http://localhost:3001/api/docs
 ## Projekt-Struktur
 
 ```
-├── unified_service.py          # Haupt-Service (FastAPI, Discovery, Metrics)
-├── db_migration.py             # Datenbank-Schema Initialisierung
-├── Dockerfile.unified          # Backend Docker-Image
-├── docker-compose.yaml         # Full-Stack Orchestrierung
-├── requirements.unified.txt    # Python-Dependencies
-├── requirements.test.txt       # Test-Dependencies (pytest)
-├── pytest.ini                  # pytest-Konfiguration
-├── .env.example                # Vorlage für Umgebungsvariablen
-├── .mcp.json                   # MCP-Client Konfiguration
-├── tests/                      # Backend-Tests (201 Tests)
-│   ├── unit/                   # Unit-Tests
-│   ├── integration/            # Integrations-Tests
-│   └── stress/                 # Stress-/Last-Tests
-├── sql/                        # Datenbank-Schema
-├── pump-find-frontend/         # React TypeScript Frontend
+├── backend/                    # Python Backend
+│   ├── Dockerfile              # Backend Docker-Image
+│   ├── requirements.txt        # Python-Dependencies
+│   ├── requirements.test.txt   # Test-Dependencies (pytest)
+│   ├── pytest.ini              # pytest-Konfiguration
+│   ├── unified_service.py      # Haupt-Service (FastAPI, Discovery, Metrics)
+│   ├── db_migration.py         # Datenbank-Schema Initialisierung
+│   └── tests/                  # Backend-Tests (201 Tests)
+│       ├── unit/               # Unit-Tests
+│       ├── integration/        # Integrations-Tests
+│       └── stress/             # Stress-/Last-Tests
+├── frontend/                   # React TypeScript Frontend
 │   ├── Dockerfile              # Frontend Docker-Image (Nginx)
 │   ├── nginx.conf              # Nginx Reverse Proxy Konfiguration
 │   ├── src/
@@ -75,7 +72,13 @@ open http://localhost:3001/api/docs
 │   │   ├── types/api.ts        # TypeScript Interfaces
 │   │   └── __tests__/          # Frontend-Tests (101 Tests)
 │   └── vitest.config.ts        # Vitest-Konfiguration
-└── docs/                       # Zusätzliche Dokumentation
+├── docs/                       # Zusätzliche Dokumentation
+├── sql/                        # Datenbank-Schema
+├── scripts/                    # Test-Utilities
+├── config/                     # Runtime-Konfiguration
+├── docker-compose.yaml         # Full-Stack Orchestrierung
+├── .env.example                # Vorlage für Umgebungsvariablen
+└── .mcp.json                   # MCP-Client Konfiguration
 ```
 
 ## Tech-Stack
@@ -323,6 +326,7 @@ Schema-Initialisierung erfolgt automatisch über `db_migration.py` beim Start.
 ### Backend — 201 Tests
 
 ```bash
+cd backend
 pip install -r requirements.test.txt
 pytest tests/ -v              # Alle Tests
 pytest tests/unit/ -v         # Unit-Tests
@@ -333,7 +337,7 @@ pytest tests/stress/ -v       # Stress-Tests
 ### Frontend — 101 Tests
 
 ```bash
-cd pump-find-frontend
+cd frontend
 npm install
 npm test                      # Alle Tests
 npm test -- --watch           # Watch-Modus

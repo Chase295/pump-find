@@ -14,19 +14,20 @@
 ## Directory Structure
 
 ```
-├── unified_service.py          # Main FastAPI service (discovery + metrics)
-├── db_migration.py             # Database schema initialization
-├── requirements.unified.txt    # Python dependencies
-├── requirements.test.txt       # Test dependencies (pytest)
-├── pytest.ini                  # pytest configuration
-├── docker-compose.yaml         # Full stack orchestration
-├── .env                        # Environment variables (gitignored)
-├── .env.example                # Template for environment setup
-├── tests/                      # Backend tests (201 tests)
-│   ├── unit/                   # Unit tests
-│   ├── integration/            # Integration tests
-│   └── stress/                 # Stress/load tests
-├── pump-find-frontend/                    # React TypeScript frontend
+├── backend/                    # Python Backend
+│   ├── Dockerfile              # Backend Docker image
+│   ├── requirements.txt        # Python dependencies
+│   ├── requirements.test.txt   # Test dependencies (pytest)
+│   ├── pytest.ini              # pytest configuration
+│   ├── unified_service.py      # Main FastAPI service (discovery + metrics)
+│   ├── db_migration.py         # Database schema initialization
+│   └── tests/                  # Backend tests (201 tests)
+│       ├── unit/               # Unit tests
+│       ├── integration/        # Integration tests
+│       └── stress/             # Stress/load tests
+├── frontend/                   # React TypeScript frontend
+│   ├── Dockerfile              # Frontend Docker image (Nginx)
+│   ├── nginx.conf              # Nginx reverse proxy config
 │   ├── src/pages/              # Dashboard, Config, Metrics, Logs, Info, Phases
 │   ├── src/services/api.ts     # Axios HTTP client
 │   ├── src/stores/pumpStore.ts # Zustand state management
@@ -37,8 +38,13 @@
 │   │   ├── services/           # API tests
 │   │   └── mocks/              # MSW mock handlers
 │   └── vitest.config.ts        # Vitest configuration
+├── docker-compose.yaml         # Full stack orchestration
+├── .env                        # Environment variables (gitignored)
+├── .env.example                # Template for environment setup
+├── .mcp.json                   # MCP client configuration
 ├── sql/                        # Database schemas
 ├── scripts/                    # Testing utilities
+├── config/                     # Runtime configuration
 └── docs/                       # Additional documentation
 ```
 
@@ -55,20 +61,21 @@ curl http://localhost:3001/api/health
 docker compose logs -f pump-find-backend
 
 # Frontend development
-cd pump-find-frontend && npm install && npm run dev
+cd frontend && npm install && npm run dev
 
 # Run backend tests (201 tests)
-pip install -r requirements.test.txt
+cd backend && pip install -r requirements.test.txt
 pytest tests/ -v
 
 # Run frontend tests (101 tests)
-cd pump-find-frontend && npm test
+cd frontend && npm test
 ```
 
 ## Test Suite
 
 ### Backend (pytest) - 201 Tests
 ```bash
+cd backend
 pytest tests/ -v                    # All tests
 pytest tests/unit/ -v               # Unit tests only
 pytest tests/integration/ -v        # Integration tests
@@ -90,7 +97,7 @@ pytest tests/stress/ -v             # Stress tests
 
 ### Frontend (vitest) - 101 Tests
 ```bash
-cd pump-find-frontend
+cd frontend
 npm test                            # Run all tests
 npm test -- --watch                 # Watch mode
 ```

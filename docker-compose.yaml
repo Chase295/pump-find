@@ -1,7 +1,7 @@
 services:
   pump-find-frontend:
     build:
-      context: ./pump-find-frontend
+      context: ./frontend
       dockerfile: Dockerfile
       # Keine VITE_API_BASE_URL für Produktion - dynamische Ermittlung
     container_name: pump-find-frontend
@@ -23,8 +23,8 @@ services:
   # Pump Find Backend (nur intern verfügbar)
   pump-find-backend:
     build:
-      context: .
-      dockerfile: Dockerfile.unified
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: pump-find-backend
     restart: unless-stopped
     # KEINE exposed ports - nur über Reverse Proxy zugänglich
