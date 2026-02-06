@@ -262,7 +262,7 @@ Die Datei `.mcp.json` im Projekt-Root konfiguriert Claude Code automatisch:
 {
   "mcpServers": {
     "pump-finder": {
-      "type": "sse",
+      "type": "streamable-http",
       "url": "http://localhost:3001/api/mcp"
     }
   }

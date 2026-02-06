@@ -2605,7 +2605,7 @@ mcp = FastApiMCP(
     name="Pump Finder MCP",
     description="MCP Server für den Pump Finder Crypto-Token Monitoring Service.",
 )
-mcp.mount_sse(mount_path="/mcp")
+mcp.mount_http(mount_path="/mcp")
 
 # === FASTAPI STARTUP ===
 if __name__ == "__main__":

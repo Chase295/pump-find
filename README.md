@@ -179,7 +179,7 @@ Das [Model Context Protocol](https://modelcontextprotocol.io/) ist ein offenes P
 
 ### Implementierung
 
-Pump Find nutzt die [`fastapi-mcp`](https://github.com/tadata-org/fastapi-mcp) Library, die automatisch alle FastAPI-Endpoints als MCP-Tools bereitstellt. Der Transport erfolgt über **SSE (Server-Sent Events)**.
+Pump Find nutzt die [`fastapi-mcp`](https://github.com/tadata-org/fastapi-mcp) Library, die automatisch alle FastAPI-Endpoints als MCP-Tools bereitstellt. Der Transport erfolgt über **Streamable HTTP**.
 
 ```python
 from fastapi_mcp import FastApiMCP
@@ -189,7 +189,7 @@ mcp = FastApiMCP(
     name="Pump Finder MCP",
     description="MCP Server für den Pump Finder Crypto-Token Monitoring Service.",
 )
-mcp.mount_sse(mount_path="/mcp")
+mcp.mount_http(mount_path="/mcp")
 ```
 
 ### Zugang
@@ -228,7 +228,7 @@ Die Datei `.mcp.json` im Projekt-Root konfiguriert kompatible AI-Clients automat
 {
   "mcpServers": {
     "pump-finder": {
-      "type": "sse",
+      "type": "streamable-http",
       "url": "http://localhost:3001/api/mcp"
     }
   }
@@ -243,21 +243,21 @@ Die Datei `.mcp.json` im Projekt-Root konfiguriert kompatible AI-Clients automat
 | **Claude Desktop** | MCP-Server manuell in den Einstellungen hinzufügen |
 | **Cursor** | MCP-Server in den Cursor-Settings konfigurieren |
 
-### Nginx SSE Proxy
+### Nginx Proxy
 
-Der Nginx Reverse Proxy hat spezielle Settings für den SSE-Transport des MCP-Servers:
+Der Nginx Reverse Proxy hat spezielle Settings für den MCP-Server:
 
 ```nginx
 location /api/mcp {
     proxy_pass http://pump-find-backend:8000/mcp;
 
-    # SSE-spezifisch
-    proxy_buffering off;     # Kein Buffering von SSE-Streams
+    # Streamable HTTP + SSE Support
+    proxy_buffering off;     # Kein Buffering von Streams
     proxy_cache off;         # Kein Caching
     proxy_read_timeout 86400s;  # 24h Timeout für langlebige Verbindungen
     proxy_http_version 1.1;
     proxy_set_header Connection "";
-    gzip off;                # Kompression inkompatibel mit SSE
+    gzip off;                # Kompression inkompatibel mit Streaming
 }
 ```
 
